@@ -1,7 +1,7 @@
 nist-data-mirror
 ================
 
-A simple Java command-line utility to mirror the CPE/CVE xml data from NIST.
+A simple Java command-line utility to mirror the CPE/CVE XML data from NIST.
 
 The intended purpose of nist-data-mirror is to be able to replicate the NIST vulnerabiity data 
 inside a company firewall so that local (faster) access to NIST data can be achieved.
