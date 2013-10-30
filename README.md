@@ -19,6 +19,6 @@ nist-data-mirror is Copyright (c) 2013 Steve Springett. All Rights Reserved.
 
 Dependency-Check is Copyright (c) 2012-2013 Jeremy Long. All Rights Reserved.
 
-Permission to modify and redistribute is granted under the terms of the GPLv3 license. See the [LICENSE.txt] [GPLv3] file for the full license.
+Permission to modify and redistribute is granted under the terms of the GPLv3 license. See [LICENSE].
 
   [Dependency-Check]: https://www.owasp.org/index.php/OWASP_Dependency_Check
