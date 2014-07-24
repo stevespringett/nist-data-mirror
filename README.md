@@ -12,6 +12,23 @@ a mirrored copy of NIST data.
 
 For best results, use nist-data-mirror with cron or another scheduler to keep the mirrored data fresh.
 
+build and deploy
+----------------
+
+### Build
+
+```sh
+gradle clean build
+```
+
+### Deploy
+
+Note that for this to work you must update the `<>` values in `init.gradle`.
+
+```sh
+gradle -I init.gradle clean uploadArchives
+```
+
 Copyright & License
 -------------------
 

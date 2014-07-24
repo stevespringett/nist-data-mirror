@@ -1,0 +1,18 @@
+apply plugin: 'java'
+
+group = 'com.ncr.mobile.util'
+version = '1.0.0'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'nist-data-mirror', 'Implementation-Version': version, 'Main-Class': 'NistDataMirror'
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
