@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * This self-contained class can be called from the command-line. It downloads the
@@ -40,37 +41,45 @@ public class NistDataMirror {
     private static final String CVE_20_BASE_URL = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%d.xml";
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
-    private String outputPath;
+    private File outputDir;
+    private static boolean downloadFailed = false;
 
-    public static void main (String[] args) throws Exception {
+    public static void main (String[] args) {
         // Ensure at least one argument was specified
         if (args.length != 1) {
-            System.out.println("Usage: java NistDataMirror outputpath");
+            System.out.println("Usage: java NistDataMirror outputDir");
             return;
         }
-        // Check for a trailing slash and add one if it doesn't exist
-        String outputPath = args[0];
-        if(outputPath.charAt(outputPath.length()-1) != File.separatorChar) {
-            outputPath += File.separator;
-        }
-
         NistDataMirror mirror = new NistDataMirror();
-        mirror.setOutputPath(outputPath);
-        mirror.doDownload(CVE_12_MODIFIED_URL);
-        mirror.doDownload(CVE_20_MODIFIED_URL);
+        mirror.setOutputDir(args[0]);
+        mirror.getAllFiles();
+        if (downloadFailed) {
+          System.exit(1);
+        }
+    }
+
+    private void getAllFiles() {
+        Date currentDate = new Date();
+        System.out.println("Downloading files at " + currentDate);
+
+        doDownload(CVE_12_MODIFIED_URL);
+        doDownload(CVE_20_MODIFIED_URL);
         for (int i=START_YEAR; i<=END_YEAR; i++) {
             String cve12BaseUrl = CVE_12_BASE_URL.replace("%d", String.valueOf(i));
             String cve20BaseUrl = CVE_20_BASE_URL.replace("%d", String.valueOf(i));
-            mirror.doDownload(cve12BaseUrl);
-            mirror.doDownload(cve20BaseUrl);
+            doDownload(cve12BaseUrl);
+            doDownload(cve20BaseUrl);
         }
     }
 
-    public void setOutputPath(String outputPath) {
-        this.outputPath = outputPath;
+    public void setOutputDir(String outputDirPath) {
+        outputDir = new File(outputDirPath);
+        if ( ! outputDir.exists()) {
+          outputDir.mkdirs();
+        }
     }
 
-    private void doDownload(String cveUrl) throws IOException {
+    private void doDownload(String cveUrl) {
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
 
@@ -83,7 +92,7 @@ public class NistDataMirror {
             filename = filename.substring(filename.lastIndexOf('/') + 1);
 
             bis = new BufferedInputStream(urlConnection.getInputStream());
-            File file = new File(outputPath + filename);
+            File file = new File(outputDir, filename);
             bos = new BufferedOutputStream(new FileOutputStream(file));
 
             int i;
@@ -91,7 +100,8 @@ public class NistDataMirror {
                 bos.write( i );
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Download failed : " + e.getLocalizedMessage());
+            downloadFailed = true;
         } finally {
             close(bis);
             close(bos);
@@ -108,3 +118,4 @@ public class NistDataMirror {
         }
     }
 }
+
