@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Calendar;
@@ -81,6 +82,20 @@ public class NistDataMirror {
         }
     }
 
+    private long checkHead(String cveUrl) {
+        try {
+            URL url = new URL(cveUrl);
+            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            connection.setRequestMethod("HEAD");
+            connection.connect();
+            connection.getInputStream();
+            return connection.getContentLengthLong();
+        } catch (IOException e) {
+            System.out.println("Failed to determine content length");
+        }
+        return 0;
+    }
+
     private void doDownload(String cveUrl) {
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
@@ -88,13 +103,21 @@ public class NistDataMirror {
         boolean success = false;
         try {
             URL url = new URL(cveUrl);
-            URLConnection urlConnection = url.openConnection();
-            System.out.println("Downloading " + url.toExternalForm());
-
             String filename = url.getFile();
             filename = filename.substring(filename.lastIndexOf('/') + 1);
+            file = new File(outputDir, filename).getAbsoluteFile();
 
-            bis = new BufferedInputStream(urlConnection.getInputStream());
+            if (file.exists()) {
+                long fileSize = checkHead(cveUrl);
+                if (file.length() == fileSize) {
+                    System.out.println("Using cached version of " + filename);
+                    return;
+                }
+            }
+
+            URLConnection connection = url.openConnection();
+            System.out.println("Downloading " + url.toExternalForm());
+            bis = new BufferedInputStream(connection.getInputStream());
             file = new File(outputDir, filename);
             bos = new BufferedOutputStream(new FileOutputStream(file));
 
