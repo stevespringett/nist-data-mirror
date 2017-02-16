@@ -18,16 +18,26 @@ build and deploy
 ### Build
 
 ```sh
-gradle clean build
+gradlew clean build
 ```
 
-### Deploy
+### Deploy (to your nexus instance)
 
 Note that for this to work you must update the `<>` values in `init.gradle`.
 
 ```sh
 gradle -I init.gradle clean uploadArchives
 ```
+
+### Run it
+
+```sh
+java -jar build\libs\nist-data-mirror-1.0.0.jar <output directory>
+```
+
+### Next steps
+
+See https://jeremylong.github.io/DependencyCheck/data/mirrornvd.html
 
 Copyright & License
 -------------------
