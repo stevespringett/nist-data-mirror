@@ -1,21 +1,20 @@
 /*
  * This file is part of nist-data-mirror.
  *
- * nist-data-mirror is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * nist-data-mirror is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License along with
- * nist-data-mirror. If not, see http://www.gnu.org/licenses/.
- *
- * Copyright (c) 2014 Steve Springett. All Rights Reserved.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+package us.springett.nistdatamirror;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -32,7 +31,7 @@ import java.util.zip.GZIPInputStream;
 
 /**
  * This self-contained class can be called from the command-line. It downloads the
- * contents of NIST CPE/CVE XML data to the specified output path.
+ * contents of NVD CPE/CVE XML and JSON data to the specified output path.
  *
  * @author Steve Springett (steve.springett@owasp.org)
  */
@@ -42,6 +41,8 @@ public class NistDataMirror {
     private static final String CVE_20_MODIFIED_URL = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-Modified.xml.gz";
     private static final String CVE_12_BASE_URL = "https://nvd.nist.gov/download/nvdcve-%d.xml.gz";
     private static final String CVE_20_BASE_URL = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%d.xml.gz";
+    private static final String CVE_JSON_MODIFIED_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz";
+    private static final String CVE_JSON_BASE_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
     private File outputDir;
@@ -67,11 +68,14 @@ public class NistDataMirror {
 
         doDownload(CVE_12_MODIFIED_URL);
         doDownload(CVE_20_MODIFIED_URL);
+        doDownload(CVE_JSON_MODIFIED_URL);
         for (int i=START_YEAR; i<=END_YEAR; i++) {
             String cve12BaseUrl = CVE_12_BASE_URL.replace("%d", String.valueOf(i));
             String cve20BaseUrl = CVE_20_BASE_URL.replace("%d", String.valueOf(i));
+            String cveJsonBaseUrl = CVE_JSON_BASE_URL.replace("%d", String.valueOf(i));
             doDownload(cve12BaseUrl);
             doDownload(cve20BaseUrl);
+            doDownload(cveJsonBaseUrl);
         }
     }
 
