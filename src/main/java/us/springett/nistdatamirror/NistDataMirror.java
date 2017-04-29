@@ -37,12 +37,12 @@ import java.util.zip.GZIPInputStream;
  */
 public class NistDataMirror {
 
-    private static final String CVE_12_MODIFIED_URL = "https://nvd.nist.gov/download/nvdcve-Modified.xml.gz";
-    private static final String CVE_20_MODIFIED_URL = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-Modified.xml.gz";
-    private static final String CVE_12_BASE_URL = "https://nvd.nist.gov/download/nvdcve-%d.xml.gz";
-    private static final String CVE_20_BASE_URL = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%d.xml.gz";
-    private static final String CVE_JSON_MODIFIED_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz";
-    private static final String CVE_JSON_BASE_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
+    private static final String CVE_XML_12_MODIFIED_URL = "https://nvd.nist.gov/download/nvdcve-Modified.xml.gz";
+    private static final String CVE_XML_20_MODIFIED_URL = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-Modified.xml.gz";
+    private static final String CVE_XML_12_BASE_URL = "https://nvd.nist.gov/download/nvdcve-%d.xml.gz";
+    private static final String CVE_XML_20_BASE_URL = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%d.xml.gz";
+    private static final String CVE_JSON_10_MODIFIED_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz";
+    private static final String CVE_JSON_10_BASE_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
     private File outputDir;
@@ -66,13 +66,13 @@ public class NistDataMirror {
         Date currentDate = new Date();
         System.out.println("Downloading files at " + currentDate);
 
-        doDownload(CVE_12_MODIFIED_URL);
-        doDownload(CVE_20_MODIFIED_URL);
-        doDownload(CVE_JSON_MODIFIED_URL);
+        doDownload(CVE_XML_12_MODIFIED_URL);
+        doDownload(CVE_XML_20_MODIFIED_URL);
+        doDownload(CVE_JSON_10_MODIFIED_URL);
         for (int i=START_YEAR; i<=END_YEAR; i++) {
-            String cve12BaseUrl = CVE_12_BASE_URL.replace("%d", String.valueOf(i));
-            String cve20BaseUrl = CVE_20_BASE_URL.replace("%d", String.valueOf(i));
-            String cveJsonBaseUrl = CVE_JSON_BASE_URL.replace("%d", String.valueOf(i));
+            String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
+            String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
+            String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
             doDownload(cve12BaseUrl);
             doDownload(cve20BaseUrl);
             doDownload(cveJsonBaseUrl);
