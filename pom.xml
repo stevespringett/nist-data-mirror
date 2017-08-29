@@ -18,8 +18,8 @@
     <url>https://github.com/stevespringett/nist-data-mirror</url>
     <licenses>
         <license>
-            <name>Apache License 2.0</name>
-            <url>https://opensource.org/licenses/Apache-2.0</url>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
 
