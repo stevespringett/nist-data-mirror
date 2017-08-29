@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>us.springett</groupId>
@@ -31,6 +30,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <timestamp>${maven.build.timestamp}</timestamp>
+        <!-- Maven Plugin Versions -->
+        <maven.javadoc.plugin.version>2.10.4</maven.javadoc.plugin.version>
+        <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
+        <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
+        <maven.github.release.plugin.version>1.2.0</maven.github.release.plugin.version>
     </properties>
 
     <developers>
@@ -48,6 +52,7 @@
         <connection>scm:git:git@github.com:stevespringett/nist-data-mirror.git</connection>
         <url>https://github.com/stevespringett/nist-data-mirror.git</url>
         <developerConnection>scm:git:git@github.com:stevespringett/nist-data-mirror.git</developerConnection>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
@@ -76,8 +81,34 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven.javadoc.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>${maven.jar.plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -89,7 +120,7 @@
             <plugin>
                 <groupId>de.jutzig</groupId>
                 <artifactId>github-release-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>${maven.github.release.plugin.version}</version>
                 <configuration>
                     <description>Executable JAR</description>
                     <tag>${project.version}</tag>
