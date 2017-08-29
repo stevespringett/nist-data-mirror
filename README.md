@@ -29,6 +29,20 @@ mvn clean package
 java -jar nist-data-mirror.jar <mirror-directory>
 ```
 
+Downloading
+----------------
+
+If you do not wish to download sources and compile yourself, [pre-compiled binaries] are available 
+for use. NIST Data Mirror is also available on the Maven Central Repository.
+
+```xml
+<dependency>
+    <groupId>us.springett</groupId>
+    <artifactId>nist-data-mirror</artifactId>
+    <version>1.1.0</version>
+</dependency>
+```
+
 Copyright & License
 -------------------
 
@@ -40,3 +54,4 @@ Permission to modify and redistribute is granted under the terms of the Apache 2
 
   [OWASP Dependency-Check]: https://www.owasp.org/index.php/OWASP_Dependency_Check
   [Apache 2.0]: https://github.com/stevespringett/nist-data-mirror/blob/master/LICENSE
+  [pre-compiled binaries]: https://github.com/stevespringett/nist-data-mirror/releases
