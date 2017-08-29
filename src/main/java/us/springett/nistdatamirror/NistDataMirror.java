@@ -54,15 +54,21 @@ public class NistDataMirror {
             System.out.println("Usage: java NistDataMirror outputDir");
             return;
         }
-        NistDataMirror mirror = new NistDataMirror();
-        mirror.setOutputDir(args[0]);
-        mirror.getAllFiles();
+        NistDataMirror nvd = new NistDataMirror(args[0]);
+        nvd.mirror();
         if (downloadFailed) {
           System.exit(1);
         }
     }
 
-    private void getAllFiles() {
+    public NistDataMirror(String outputDirPath) {
+        outputDir = new File(outputDirPath);
+        if ( ! outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+    }
+
+    public void mirror() {
         Date currentDate = new Date();
         System.out.println("Downloading files at " + currentDate);
 
@@ -76,13 +82,6 @@ public class NistDataMirror {
             doDownload(cve12BaseUrl);
             doDownload(cve20BaseUrl);
             doDownload(cveJsonBaseUrl);
-        }
-    }
-
-    public void setOutputDir(String outputDirPath) {
-        outputDir = new File(outputDirPath);
-        if ( ! outputDir.exists()) {
-          outputDir.mkdirs();
         }
     }
 
@@ -141,7 +140,7 @@ public class NistDataMirror {
             uncompress(file);
     }
 
-    public void uncompress(File file) {
+    private void uncompress(File file) {
         byte[] buffer = new byte[1024];
         GZIPInputStream gzis = null;
         FileOutputStream out = null;
