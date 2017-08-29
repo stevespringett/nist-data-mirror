@@ -46,7 +46,7 @@ public class NistDataMirror {
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
     private File outputDir;
-    private static boolean downloadFailed = false;
+    private boolean downloadFailed = false;
 
     public static void main (String[] args) {
         // Ensure at least one argument was specified
@@ -56,7 +56,7 @@ public class NistDataMirror {
         }
         NistDataMirror nvd = new NistDataMirror(args[0]);
         nvd.mirror();
-        if (downloadFailed) {
+        if (nvd.downloadFailed) {
           System.exit(1);
         }
     }
