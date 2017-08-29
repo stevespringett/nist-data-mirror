@@ -24,6 +24,15 @@
         </license>
     </licenses>
 
+    <properties>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <timestamp>${maven.build.timestamp}</timestamp>
+    </properties>
+
     <developers>
         <developer>
             <name>Steve Springett</name>
@@ -35,14 +44,21 @@
         </developer>
     </developers>
 
-    <properties>
-        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <timestamp>${maven.build.timestamp}</timestamp>
-    </properties>
+    <scm>
+        <connection>scm:git:git@github.com:stevespringett/nist-data-mirror.git</connection>
+        <url>https://github.com/stevespringett/nist-data-mirror.git</url>
+        <developerConnection>scm:git:git@github.com:stevespringett/nist-data-mirror.git</developerConnection>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/stevespringett/nist-data-mirror/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>travis-ci</system>
+        <url>https://travis-ci.org/stevespringett/nist-data-mirror</url>
+    </ciManagement>
 
     <build>
         <finalName>${pom.artifactId}</finalName>
