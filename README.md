@@ -1,7 +1,9 @@
-nist-data-mirror
+[![Build Status](https://travis-ci.org/stevespringett/nist-data-mirror.svg?branch=master)](https://travis-ci.org/stevespringett/nist-data-mirror)
+
+NIST Data Mirror
 ================
 
-A simple Java command-line utility to mirror the CPE/CVE XML and JSON data from NIST.
+A simple Java command-line utility to mirror the NVD (CPE/CVE XML and JSON) data from NIST.
 
 The intended purpose of nist-data-mirror is to be able to replicate the NIST vulnerabiity data 
 inside a company firewall so that local (faster) access to NIST data can be achieved.
