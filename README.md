@@ -45,6 +45,11 @@ for use. NIST Data Mirror is also available on the Maven Central Repository.
 </dependency>
 ```
 
+Related Projects
+----------------
+
+* [VulnDB Data Mirror](https://github.com/stevespringett/vulndb-data-mirror)
+
 Copyright & License
 -------------------
 
