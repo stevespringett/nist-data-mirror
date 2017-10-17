@@ -1,3 +1,7 @@
 .gradle
 .gradletasknamecache
 build/
+/target/
+.classpath
+.project
+.settings

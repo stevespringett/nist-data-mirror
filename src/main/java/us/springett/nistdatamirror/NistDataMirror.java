@@ -23,11 +23,21 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * This self-contained class can be called from the command-line. It downloads the
@@ -45,30 +55,49 @@ public class NistDataMirror {
     private static final String CVE_JSON_10_BASE_URL = "https://static.nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
-    private File outputDir;
+    
+    private final File outputDir;
+    private final Proxy proxy;
+    
     private boolean downloadFailed = false;
 
     public static void main (String[] args) {
         // Ensure at least one argument was specified
-        if (args.length != 1) {
-            System.out.println("Usage: java NistDataMirror outputDir");
+        if (args.length == 0) {
+            System.out.println("Usage: java [-proxy <host:port>] <NistDataMirror outputDir>");
             return;
         }
-        NistDataMirror nvd = new NistDataMirror(args[0]);
+        
+        NistDataMirror nvd = new NistDataMirror(args);
         nvd.mirror();
         if (nvd.downloadFailed) {
           System.exit(1);
         }
     }
-
-    public NistDataMirror(String outputDirPath) {
-        outputDir = new File(outputDirPath);
+    	
+    public NistDataMirror(String[] args) {
+    	String outputDirPath = args[0];
+        
+        if (args[0].equals("-proxy")) {
+        	this.proxy = createProxy(args[1]);
+        	outputDirPath = args[2];
+        } else {
+        	this.proxy = Proxy.NO_PROXY;
+        }
+        
+        this.outputDir = new File(outputDirPath);
         if ( ! outputDir.exists()) {
             outputDir.mkdirs();
         }
     }
 
     public void mirror() {
+    	// if a proxy is in use, handle case where proxy terminates ssl (many corp proxies do)
+    	// FIXME - should trust all certs be an extra parameter???
+    	if (!proxy.equals(Proxy.NO_PROXY)) {
+    		initSSLTrustAllManager();
+    	}
+    	
         Date currentDate = new Date();
         System.out.println("Downloading files at " + currentDate);
 
@@ -85,10 +114,29 @@ public class NistDataMirror {
         }
     }
 
+    private Proxy createProxy(String proxy) {
+    	int indexOf = proxy.indexOf(":");
+    	if (indexOf != -1) {
+    		String host = proxy.substring(0, indexOf);
+    		int port = toPort(proxy.substring(indexOf + 1));
+    		return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
+    	} else {
+    		return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy, 3128));
+    	}
+    }
+    
+    private int toPort(String port) {
+    	try {
+    		return Integer.parseInt(port);
+    	} catch (NumberFormatException nfe) {
+    		return 3128;
+    	}
+    }
+
     private long checkHead(String cveUrl) {
         try {
             URL url = new URL(cveUrl);
-            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
             connection.setRequestMethod("HEAD");
             connection.connect();
             connection.getInputStream();
@@ -118,7 +166,7 @@ public class NistDataMirror {
                 }
             }
 
-            URLConnection connection = url.openConnection();
+            URLConnection connection = url.openConnection(proxy);
             System.out.println("Downloading " + url.toExternalForm());
             bis = new BufferedInputStream(connection.getInputStream());
             file = new File(outputDir, filename);
@@ -169,4 +217,44 @@ public class NistDataMirror {
             }
         }
     }
+    
+ 	private void initSSLTrustAllManager() {
+ 		TrustManager[] trustAllCerts = new TrustManager[] { 
+ 			new X509TrustManager() {
+	 			/**
+	 			 * Trust all certs
+	 			 */
+	 			public X509Certificate[] getAcceptedIssuers() {
+	 				return null;
+	 			}
+	
+	 			/**
+	 			 * Trust all certs
+	 			 */
+	 			public void checkClientTrusted(X509Certificate[] certs, String authType) {
+	 			}
+	
+	 			/**
+	 			 * Trust all certs
+	 			 */
+	 			public void checkServerTrusted(X509Certificate[] certs, String authType) {
+	 			}
+	 		} 
+ 		};
+
+ 		HostnameVerifier allHostsValid = new HostnameVerifier() {
+ 			public boolean verify(String hostname, SSLSession session) {
+ 				return true;
+ 			}
+ 		};
+
+ 		try {
+ 			SSLContext sc = SSLContext.getInstance("TLSv1.2");
+ 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+ 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+ 			HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
+ 		}
+ 	}
 }
