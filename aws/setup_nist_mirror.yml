@@ -1,0 +1,57 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys the S3 bucket and Route53 records for the NIST mirror
+Parameters:
+  PublicHostedZoneId:
+    Type: String
+  PrivateHostedZoneId:
+    Type: String
+  HostedZone:
+    Type: String
+  MirrorPrefix:
+    Type: String
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: !Sub '${MirrorPrefix}.${HostedZone}'
+  S3BucketPublicPolicy: 
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: 
+        Ref: S3Bucket
+      PolicyDocument: 
+        Statement: 
+          - 
+            Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: 
+              Fn::Join: 
+                - ""
+                - 
+                  - "arn:aws:s3:::"
+                  - 
+                    Ref: "S3Bucket"
+                  - "/*"
+            Principal: "*"
+  PublicRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref PublicHostedZoneId
+      Comment: NIST mirror
+      Name: !Sub '${MirrorPrefix}.${HostedZone}.'
+      Type: CNAME
+      TTL: 60
+      ResourceRecords: 
+        - !Sub '${MirrorPrefix}.${HostedZone}.s3.amazonaws.com.'
+  PrivateRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref PrivateHostedZoneId
+      Comment: NIST mirror
+      Name: !Sub '${MirrorPrefix}.${HostedZone}.'
+      Type: CNAME
+      TTL: 60
+      ResourceRecords: 
+        - !Sub '${MirrorPrefix}.${HostedZone}.s3.amazonaws.com.'
