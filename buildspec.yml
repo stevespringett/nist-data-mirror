@@ -1,0 +1,45 @@
+#
+# Copyright Transurban Pty. Ltd.
+#
+
+version: 0.2
+
+env:
+  variables:
+    IMAGE_TAG: latest
+    M2_HOME: /usr/local/apache-maven
+    MAVEN_OPTS: "-Xms256m -Xmx512m"
+    MAVEN_VER: 3.5.0
+    NIST_S3_BUCKET: http://nist-mirror.ops.nxbos.cloud
+
+phases:
+  install:
+    commands:
+      - nohup dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=overlay& 
+      - timeout -t 15 sh -c "until docker info; do echo .; sleep 1; done"
+  pre_build:
+    commands:
+      - $(aws ecr get-login --region us-west-2 --no-include-email)
+      - echo 'Add the Artifactory mvn repo and run mvn install'
+      - chmod +x ~/artifactory-settings/update-artifactory-settings.sh
+      - ~/artifactory-settings/update-artifactory-settings.sh
+  build:
+    commands:
+      - echo 'mvn package and Push Docker images to ECR'
+      - echo Build started on $(date)
+      - $M2_HOME/bin/mvn clean package
+      - java -jar target/nist-data-mirror.jar nist
+      - docker build -t ops-microservice-nginx-nist-data-mirror .
+      - echo Build completed on $(date)
+      - docker tag ops-microservice-nginx-nist-data-mirror:latest "${IMAGE_REPO_NAME}/${ECRNAME}:${IMAGE_TAG}"
+      - docker push "${IMAGE_REPO_NAME}/${ECRNAME}:${IMAGE_TAG}"
+      - echo 'Nothing left to build, enjoy ...'
+  post_build:
+    commands:
+      - echo 'Nothing to do here'
+artifacts:
+  files:
+    - '**/*'
+cache:
+  paths:
+    - '~/.m2/**/*'

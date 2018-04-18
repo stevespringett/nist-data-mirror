@@ -1,0 +1,56 @@
+---
+- name: "Update Lambda sha1 hash via comment"
+  command: echo "`date`"|zip --archive-comment handler.zip
+
+- name: "Package Function"
+  command: >
+    aws --region {{ region }} cloudformation package 
+      --template-file {{ role_path }}/files/deploy.sam.yaml 
+      --output-template-file {{ role_path }}/files/deploy.out.yaml 
+      --s3-bucket ops-dev-0-lambda-{{ inventory[tagenvironment].aws_account_id }}-{{ region }} 
+      --s3-prefix sam
+
+- name: "Deploy MS/Lambda/TargetGroups/Route53"
+  command: >
+    aws --region {{ region }} cloudformation deploy 
+      --template-file {{ role_path }}/files/deploy.out.yaml 
+      --capabilities CAPABILITY_IAM 
+      --stack-name {{ product }}-{{ tagenvironment }}-{{ tagenvironmentnumber }}-ecs-{{ tagapplication }}-ms
+      --parameter-overrides 
+        FunctionAlias="{{ functionalias }}" 
+        AssetName="{{ inventory.account_name }}"
+        VPCID="{{ vpc_id.stdout }}"
+        ClusterName="{{ cluster_cfn_facts.stack_outputs.ClusterName }}"
+        ECSContainerAgentRoleArn="{{ roles_cfn_facts.stack_outputs.ECSContainerAgentRoleArn }}" 
+        IntListener443="{{ int_alb_cfn_facts.stack_outputs.Listener443 }}"
+        ExtListener443="{{ ext_alb_cfn_facts.stack_outputs.Listener443 }}"
+        ListenerPriority="{{ rule_priority.stdout }}"
+        HostedZoneDomain="{{ inventory[tagenvironment].products[product].ext_dns_zone }}"
+        ExtHostedZoneId="{{ extzoneid.stdout }}"
+        IntHostedZoneId="{{ intzoneid.stdout }}"
+        ExtLoadbalancerDNS="{{ ext_alb_cfn_facts.stack_outputs.LoadBalancerUrl }}"
+        IntLoadbalancerDNS="{{ int_alb_cfn_facts.stack_outputs.LoadBalancerUrl }}"
+        DesiredCount="{{ desiredcount }}"
+        DockerImage="{{ opsaccountid }}.dkr.ecr.{{ ops.inventory.prd.regions.default_region }}.amazonaws.com/{{ ecrname }}:{{ containertag }}"
+        HealthCheckPath="{{ healthcheckpath }}"
+        ContainerName="{{ containername }}"
+        ContainerPort="{{ application.server.port }}"
+        MemoryMin="{{ memorymin }}"
+        MemoryMax="{{ memorymax }}"
+        TagEnvironment="{{ tagenvironment }}"
+        TagEnvironmentNumber="{{ tagenvironmentnumber }}"
+        TagClusterEnvironmentNumber="{{ cluster_env_no }}"
+        Product="{{ product }}"
+        KmsKeyArn="{{ kmskeyarn | default('N/A') }}"
+        DeployDate="{{ deploydate }}"
+        LogLevel="{{ loglevel }}"
+        Version="{{ containertag }}"
+      --tags 
+        Name={{ product }}-{{ tagenvironment }}-{{ tagenvironmentnumber }}-ecs-{{ tagapplication }}-ms
+        Service={{ tagservice }} 
+        Environment={{ tagenvironment }} 
+        Application={{ tagapplication }} 
+        Product={{ product }} 
+        Tenant={{ tagtenant }} 
+        Role={{ tagrole }} 
+        Version={{ version }}

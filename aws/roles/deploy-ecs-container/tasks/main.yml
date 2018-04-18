@@ -1,0 +1,5 @@
+---
+# Cloud config is expected to be downloaded into workspace (i.e. repo root, and unzipped into folder called nbos-cloud-config)
+
+- import_tasks: discovery.yml
+- import_tasks: alb-ecs-service.yml
