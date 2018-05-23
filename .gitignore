@@ -1,3 +1,5 @@
 .gradle
 .gradletasknamecache
 build/
+target/
+nist/
