@@ -1,0 +1,72 @@
+---
+
+- name: "Load target account config"
+  include_vars: "{{ playbook_dir }}/../nbos-cloud-config/configs/{{ accountname }}.yml"
+
+- name: "Load ops config"
+  include_vars:
+    file: "{{ playbook_dir }}/../nbos-cloud-config/configs/ops.yml"
+    name: ops
+
+- name: "Load application yml"
+  include_vars:
+    file: "{{ playbook_dir }}/../src/main/resources/config/application.yml"
+    name: application
+
+- name: "Describe External ALB Stack"
+  cloudformation_facts:
+    stack_name: "{{ product }}-{{ tagenvironment }}-{{ tagenvironmentnumber }}-ecs-microservices-ext-alb"
+    region: "{{ region }}"
+  register: ext_alb_cfn
+
+- name: "Describe Internal ALB Stack"
+  cloudformation_facts:
+    stack_name: "{{ product }}-{{ tagenvironment }}-{{ tagenvironmentnumber }}-ecs-microservices-int-alb"
+    region: "{{ region }}"
+  register: int_alb_cfn
+
+- name: "Describe Cluster Stack"
+  cloudformation_facts:
+    stack_name: "{{ inventory.account_name }}-{{ tagenvironment }}-{{ cluster_env_no }}-ecs-cluster"
+    region: "{{ region }}"
+  register: cluster_cfn
+
+- name: "Describe Jenkins Roles"
+  cloudformation_facts:
+    stack_name: "{{ inventory.account_name }}-{{ tagenvironment }}-{{ cluster_env_no }}-iam-jenkins-roles"
+    region: "{{ region }}"
+  register: roles_cfn
+
+- name: Marshal into facts
+  set_fact:
+    ext_alb_cfn_facts: "{% for key, value in ext_alb_cfn.ansible_facts.cloudformation.iteritems() %}{{ value }}{%endfor%}"
+    int_alb_cfn_facts: "{% for key, value in int_alb_cfn.ansible_facts.cloudformation.iteritems() %}{{ value }}{%endfor%}"
+    cluster_cfn_facts: "{% for key, value in cluster_cfn.ansible_facts.cloudformation.iteritems() %}{{ value }}{%endfor%}"
+    roles_cfn_facts: "{% for key, value in roles_cfn.ansible_facts.cloudformation.iteritems() %}{{ value }}{%endfor%}"
+
+- name: "Discover VPC ID"
+  shell: >
+    aws --region {{ region }} ec2 describe-vpcs 
+    --filters Name=tag:Name,Values={{ inventory[tagenvironment].vpc_name }} 
+    --query Vpcs[].VpcId --output text
+  register: vpc_id
+
+- name: Discover ext hosted zone id
+  shell: >
+    aws --region {{ region }} route53 list-hosted-zones 
+    --query "HostedZones[?Name=='{{ inventory[tagenvironment].products[product].ext_dns_zone }}.']" | 
+    jq -r '.[] | select(.Config.PrivateZone == 'false') | .Id' |
+    awk -F'/' '{print $3}'
+  register: extzoneid
+
+- name: Discover int hosted zone id
+  shell: >
+    aws --region {{ region }} route53 list-hosted-zones 
+    --query "HostedZones[?Name=='{{ inventory[tagenvironment].products[product].ext_dns_zone }}.']" | 
+    jq -r '.[] | select(.Config.PrivateZone == 'true') | .Id' |
+    awk -F'/' '{print $3}'
+  register: intzoneid
+
+- name: "Resolve next listener rule priority"
+  shell: "{{ role_path }}/files/issue-rule-priority-v2 {{ int_alb_cfn_facts.stack_outputs.Listener443 }}"
+  register: rule_priority

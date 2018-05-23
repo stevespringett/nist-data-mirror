@@ -1,0 +1,281 @@
+#
+# Copyright Transurban Pty. Ltd.
+#
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Deploy nist-nvd-mirror container with Lambda to map 2nd lb
+Parameters:
+  VPCID:
+    Description: The VPC that the ECS cluster is deployed to
+    Type: AWS::EC2::VPC::Id
+  ClusterName:
+    Description: "Please provide the ECS Cluster that this service should run on"
+    Type: String
+  ECSContainerAgentRoleArn:
+    Description: "ECS Container agent role"
+    Type: String
+
+  ExtListener443:
+    Description: ALB HTTPS Listener
+    Type: String
+  IntListener443:
+    Description: ALB HTTPS Listener
+    Type: String
+  ListenerPriority:
+    Description: The Listener Priority
+    Type: String
+  HostedZoneDomain:
+    Description: Hosted Zone Domain
+    Type: String
+  ExtHostedZoneId:
+    Description: Hosted zone identifer
+    Type: String
+  IntHostedZoneId:
+    Description: Hosted zone identifer
+    Type: String
+  ExtLoadbalancerDNS:
+    Description: Loadbalancer Url
+    Type: String
+  IntLoadbalancerDNS:
+    Description: Loadbalancer Url
+    Type: String
+
+
+  DesiredCount:
+    Description: How many instances of this task should we run across our cluster?
+    Type: Number
+  DockerImage:
+    Description: Image repository
+    Type: String
+  HealthCheckPath:
+    Description: The path to register with the Application Load Balancer
+    Type: String
+  ContainerName:
+    Description: The container name
+    Type: String
+  ContainerPort:
+    Description: The container port
+    Type: String
+  MemoryMin:
+    Description: Minimum memory for container
+    Type: String
+  MemoryMax:
+    Description: Maximum memory for container before terminating it
+    Type: String
+
+  TagEnvironment:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+  TagEnvironmentNumber:
+    Description: Environment Number
+    Type: String
+  TagClusterEnvironmentNumber:
+    Description: Environment Number
+    Type: String
+  Product:
+    Description: Product Acronym
+    Type: String
+
+  KmsKeyArn:
+    Description: KMS Key Arn
+    Type: String
+  LogLevel:
+    Description: Log Level for microservice
+    Type: String
+  FunctionAlias:
+    Description: Alias for blue/green deployments
+    Type: String
+  DeployDate:
+    Description: Date the container was deployed
+    Type: String
+  Version:
+    Description: Version of the microservice
+    Type: String
+
+Resources:
+
+  Function:
+    Type: "AWS::Serverless::Function"
+    DependsOn:
+    - IntListenerRule443
+    - ExtListenerRule443
+    Properties:
+      FunctionName: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-lb-mapper'
+      DeploymentPreference:
+        Type: AllAtOnce
+      AutoPublishAlias: !Ref "FunctionAlias"
+      Description: Lambda function gets triggered on ECS task events
+      Handler: lambda_function.lambda_handler
+      Runtime: python2.7
+      Timeout: 300
+      CodeUri: ./handler.zip
+      Events:
+        CloudWatchEventTrigger:
+          Type: CloudWatchEvent
+          Properties: 
+            Pattern: !Sub '{"source": ["aws.ecs"],"detail-type": ["ECS Task State Change"],"detail": {"clusterArn": ["arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterName}"]}}'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+          - Effect: Allow
+            Action:
+            - ecs:ListTasks
+            - ecs:Describe*
+            - elasticloadbalancing:Describe*
+            - elasticloadbalancing:RegisterTargets
+            - elasticloadbalancing:DeregisterTargets
+            Resource: '*'
+      Environment:
+        Variables:
+          TARGET_GROUP: !GetAtt 'ExtTargetGroup.TargetGroupName'
+          ECS_SERVICE: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-ms'
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn:
+    - Function
+    Properties:
+      ServiceName: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-ms'
+      Cluster: !Ref 'ClusterName'
+      Role: !Ref 'ECSContainerAgentRoleArn'
+      DesiredCount: !Ref 'DesiredCount'
+      TaskDefinition: !Ref 'TaskDefinition'
+      HealthCheckGracePeriodSeconds: 120
+      PlacementStrategies:
+      - Type: spread
+        Field: attribute:ecs.availability-zone
+      - Type: spread
+        Field: instanceId
+      LoadBalancers:
+      - ContainerName: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-ms'
+        ContainerPort: !Ref 'ContainerPort'
+        TargetGroupArn: !Ref 'IntTargetGroup'
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-ms'
+      ContainerDefinitions:
+      - Name: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-ms'
+        Essential: 'true'
+        Image: !Ref 'DockerImage'
+        MemoryReservation: !Ref 'MemoryMin'
+        Memory: !Ref 'MemoryMax'
+        Environment:
+        - Name: ENVIRONMENT_NAME
+          Value: !Sub '${TagEnvironment}'
+        - Name: ENVIRONMENT_NUMBER
+          Value: !Sub '${TagEnvironmentNumber}'
+        - Name: BUILD_VERSION
+          Value: !Sub '${Version}'
+        - Name: DEPLOY_DATE
+          Value: !Sub '${DeployDate}'
+        - Name: LOG_LEVEL
+          Value: !Sub '${LogLevel}'
+        - Name: AWS_REGION
+          Value: !Ref 'AWS::Region'
+        - Name: AWS_ACCOUNT_ID
+          Value: !Ref 'AWS::AccountId'
+        - Name: ECS_ENABLE_TASK_IAM_ROLE
+          Value: 'true'
+        - Name: TZ
+          Value: 'UTC'
+        PortMappings:
+        - ContainerPort: !Ref 'ContainerPort'
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Sub '${TagEnvironment}-${TagEnvironmentNumber}/ecs/microservices-${Product}-${ContainerName}'
+            awslogs-region: !Ref 'AWS::Region'
+
+  CloudWatchLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${TagEnvironment}-${TagEnvironmentNumber}/ecs/microservices-${Product}-${ContainerName}'
+
+  ExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-ext'
+      VpcId: !Ref 'VPCID'
+      Port: '80'
+      Protocol: HTTP
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: '30'
+      HealthCheckPath: !Ref 'HealthCheckPath'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: '5'
+      HealthyThresholdCount: '2'
+
+  ExtListenerRule443:
+    DependsOn: ExtTargetGroup
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref 'ExtListener443'
+      Priority: !Ref 'ListenerPriority'
+      Conditions:
+      - Field: host-header
+        Values:
+        - !Sub "nist-nvd-mirror.${HostedZoneDomain}"
+      Actions:
+      - TargetGroupArn: !Ref 'ExtTargetGroup'
+        Type: forward
+
+  ExtRoute53Record:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: !Ref "ExtHostedZoneId"
+      Comment: "ALB Ext ELB Record"
+      Name: !Sub "nist-nvd-mirror.${HostedZoneDomain}"
+      Type: "CNAME"
+      TTL: "60"
+      ResourceRecords:
+        - !Ref "ExtLoadbalancerDNS"
+
+  IntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${Product}-${TagEnvironment}-${TagEnvironmentNumber}-${ContainerName}-int'
+      VpcId: !Ref 'VPCID'
+      Port: '80'
+      Protocol: HTTP
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: '30'
+      HealthCheckPath: !Ref 'HealthCheckPath'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: '5'
+      HealthyThresholdCount: '2'
+
+  IntListenerRule443:
+    DependsOn: IntTargetGroup
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref 'IntListener443'
+      Priority: !Ref 'ListenerPriority'
+      Conditions:
+      - Field: host-header
+        Values:
+        - !Sub "nist-nvd-mirror.${HostedZoneDomain}"
+      Actions:
+      - TargetGroupArn: !Ref 'IntTargetGroup'
+        Type: forward
+
+  IntRoute53Record:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: !Ref "IntHostedZoneId"
+      Comment: "ALB Int ELB Record"
+      Name: !Sub "nist-nvd-mirror.${HostedZoneDomain}"
+      Type: "CNAME"
+      TTL: "60"
+      ResourceRecords:
+        - !Ref "IntLoadbalancerDNS"
