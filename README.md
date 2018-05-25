@@ -42,7 +42,7 @@ for use. NIST Data Mirror is also available on the Maven Central Repository.
 <dependency>
     <groupId>us.springett</groupId>
     <artifactId>nist-data-mirror</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
