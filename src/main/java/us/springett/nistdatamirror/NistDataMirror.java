@@ -57,7 +57,11 @@ public class NistDataMirror {
             System.out.println("Usage: java NistDataMirror outputDir [xml|json]");
             return;
         }
-        NistDataMirror nvd = new NistDataMirror(args[0], args[1]);
+        String type = null; 
+        if (args.length == 2) {
+            type = args[1];
+        }
+        NistDataMirror nvd = new NistDataMirror(args[0], type);
         nvd.mirror();
         if (nvd.downloadFailed) {
           System.exit(1);
