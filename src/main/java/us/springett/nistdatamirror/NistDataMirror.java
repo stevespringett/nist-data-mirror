@@ -47,41 +47,64 @@ public class NistDataMirror {
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
     private File outputDir;
     private boolean downloadFailed = false;
+    private boolean json = true;
+    private boolean xml = true;
+
 
     public static void main (String[] args) {
         // Ensure at least one argument was specified
-        if (args.length != 1) {
-            System.out.println("Usage: java NistDataMirror outputDir");
+        if (args.length == 0 || args.length > 2 ) {
+            System.out.println("Usage: java NistDataMirror outputDir [xml|json]");
             return;
         }
-        NistDataMirror nvd = new NistDataMirror(args[0]);
+        String type = null; 
+        if (args.length == 2) {
+            type = args[1];
+        }
+        NistDataMirror nvd = new NistDataMirror(args[0], type);
         nvd.mirror();
         if (nvd.downloadFailed) {
           System.exit(1);
         }
     }
 
-    public NistDataMirror(String outputDirPath) {
+    public NistDataMirror(String outputDirPath, String type) {
         outputDir = new File(outputDirPath);
         if ( ! outputDir.exists()) {
             outputDir.mkdirs();
+        }
+        if ( type != null ) {
+            if ( type.equals("xml")) { 
+                json = false;
+            } else if ( type.equals("json")) { 
+                xml = false;
+            } else {
+                throw new IllegalArgumentException(String.format("Invalid type parameter '%s'. Usage: java NistDataMirror outputDir [xml|json]", type));
+            }
         }
     }
 
     public void mirror() {
         Date currentDate = new Date();
         System.out.println("Downloading files at " + currentDate);
-
-        doDownload(CVE_XML_12_MODIFIED_URL);
-        doDownload(CVE_XML_20_MODIFIED_URL);
-        doDownload(CVE_JSON_10_MODIFIED_URL);
+        if ( xml ) {
+            doDownload(CVE_XML_12_MODIFIED_URL);
+            doDownload(CVE_XML_20_MODIFIED_URL);
+        }
+        if ( json ) {
+            doDownload(CVE_JSON_10_MODIFIED_URL);
+        }
         for (int i=START_YEAR; i<=END_YEAR; i++) {
-            String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
-            String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
-            String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
-            doDownload(cve12BaseUrl);
-            doDownload(cve20BaseUrl);
-            doDownload(cveJsonBaseUrl);
+            if ( xml ) {
+                String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
+                String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
+                doDownload(cve12BaseUrl);
+                doDownload(cve20BaseUrl);
+            }
+            if ( json ) {
+                String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
+                doDownload(cveJsonBaseUrl);
+            }
         }
     }
 
