@@ -28,8 +28,9 @@ mvn clean package
 ### Running
 
 ```sh
-java -jar nist-data-mirror.jar <mirror-directory>
+java -jar nist-data-mirror.jar <mirror-directory> [xml|json]
 ```
+Omitting filetype argument will result in both filetypes being downloaded.
 
 Downloading
 ----------------
