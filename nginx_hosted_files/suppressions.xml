@@ -47,5 +47,21 @@
         <cve>CVE-2007-0733</cve>
         <cve>CVE-2011-0241</cve>
         <cve>CVE-2011-0215</cve>
+        <cve>CVE-2006-1552</cve>
+        <cve>CVE-2010-0538</cve>
+        <cve>CVE-2011-0181</cve>
+        <cve>CVE-2011-0194</cve>
+        <cve>CVE-2011-0204</cve>
+        <cve>CVE-2011-0205</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: ips-commons-spring-microservice-1.1.15.jar
+   ]]></notes>
+        <gav regex="true">^tech\.transurban:ips-commons-spring-microservice:.*$</gav>
+        <cve>CVE-2016-9878</cve>
+        <cve>CVE-2018-1270</cve>
+        <cve>CVE-2018-1270</cve>
+        <cve>CVE-2018-1272</cve>
     </suppress>
 </suppressions>
