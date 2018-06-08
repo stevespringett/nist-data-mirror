@@ -43,7 +43,7 @@ Void properties() {
 
 ansiColor {
     timestamps {
-        isStartedByTimer = jobCauses.isCancellableBuild('', 'automated')
+        isStartedByTimer = jobCauses.isCancellableBuild(jobCauses.CAUSEAUTOMATED)
         // Trigger regression if adhoc kicked off, or by timer (only on develop)
         if ( !isStartedByTimer || (isStartedByTimer && env.BRANCH_NAME == 'master') ) {
             node {
