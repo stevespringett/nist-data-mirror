@@ -1,0 +1,5 @@
+---
+tagservice: ecs
+tagrole: service
+tagtenant: nbos
+tagapplication: nist-nvd-mirror

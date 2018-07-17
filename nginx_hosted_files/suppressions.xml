@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright Transurban Pty. Ltd.
+
+-->
+<suppressions 
+    xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+    <suppress>
+        <notes>
+            <![CDATA[file name: android-json-0.0.20131108.vaadin1.jar]]>
+        </notes>
+        <gav regex="true">^com\.vaadin\.external\.google:android-json:.*$</gav>
+        <cpe>cpe:/a:google:android</cpe>
+    </suppress>
+    <suppress>
+        <notes>
+            <![CDATA[
+        file name: postgresql-42.1.4.jar
+        According to the description this exists in 'Debian postgresql-common package before 181+deb9u1' but Heroru states
+        (see https://devcenter.heroku.com/articles/stack-packages) that both Cedar-16 and Heroku-16 stacks contain newer
+        versions of the postgresql-common package (186.pgdb14.04+1 and 186.pgdb16.04+1 respectively)
+        ]]>
+        </notes>
+        <gav regex="true">^org\.postgresql:postgresql:.*$</gav>
+        <cve>CVE-2017-8806</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            <![CDATA[file name: javax.ws.rs-api-2.1.jar]]>
+        </notes>
+        <gav regex="true">^javax\.ws\.rs:javax\.ws\.rs-api:.*$</gav>
+        <cve>CVE-2015-4345</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            <![CDATA[This suppresses CVE-2017-8046 for Spring Boot 2.0.0.RELEASE]]>
+        </notes>
+        <gav regex="true">^org\.springframework\.boot:spring-.*:2.0.0.RELEASE$</gav>
+        <cve>CVE-2017-8046</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            <![CDATA[ file name: jrawio-1.5.0.jar ]]>
+        </notes>
+        <gav regex="true">^it\.tidalwave\.imageio:jrawio:.*$</gav>
+        <cve>CVE-2007-0733</cve>
+        <cve>CVE-2011-0241</cve>
+        <cve>CVE-2011-0215</cve>
+        <cve>CVE-2006-1552</cve>
+        <cve>CVE-2010-0538</cve>
+        <cve>CVE-2011-0181</cve>
+        <cve>CVE-2011-0194</cve>
+        <cve>CVE-2011-0204</cve>
+        <cve>CVE-2011-0205</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: ips-commons-spring-microservice-1.1.15.jar
+   ]]></notes>
+        <gav regex="true">^tech\.transurban:ips-commons-spring-microservice:.*$</gav>
+        <cve>CVE-2016-9878</cve>
+        <cve>CVE-2018-1270</cve>
+        <cve>CVE-2018-1270</cve>
+        <cve>CVE-2018-1272</cve>
+    </suppress>
+    <suppress>
+        <notes>
+            <![CDATA[This suppresses CVE-2018-1258 for Spring Framework < 5.0.6]]>
+        </notes>
+        <gav regex="true">^org\.springframework.*:5\.0\.4.*$</gav>
+        <cve>CVE-2018-1257</cve>
+        <cve>CVE-2018-1258</cve>
+    </suppress>    
+</suppressions>
