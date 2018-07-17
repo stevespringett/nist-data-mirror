@@ -64,4 +64,12 @@
         <cve>CVE-2018-1270</cve>
         <cve>CVE-2018-1272</cve>
     </suppress>
+    <suppress>
+        <notes>
+            <![CDATA[This suppresses CVE-2018-1258 for Spring Framework < 5.0.6]]>
+        </notes>
+        <gav regex="true">^org\.springframework.*:5\.0\.4.*$</gav>
+        <cve>CVE-2018-1257</cve>
+        <cve>CVE-2018-1258</cve>
+    </suppress>    
 </suppressions>
