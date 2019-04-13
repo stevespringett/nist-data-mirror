@@ -24,7 +24,6 @@ RUN apk update                                                              && \
     mkdir -p /var/log/cron                                                  && \
     mkdir -p /var/spool/cron/crontabs                                       && \
     mkdir /tmp/nvd                                                          && \
-    mkdir /usr/local/apache2/htdocs/backup                                  && \
     adduser -D ${user}                                                      && \
     touch /var/log/cron.log                                                 && \
     rm -rf /var/lib/apt/lists/* /tmp/*
