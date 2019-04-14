@@ -46,6 +46,27 @@ for use. NIST Data Mirror is also available on the Maven Central Repository.
 </dependency>
 ```
 
+Docker
+----------------
+
+A dockerfile was created, but the image has not been pushed. This was created to 
+assist in debugging other issues. While the image does create an httpd instance 
+that mirrors the NVD CVE data feeds - note that it also creates a backup for all 
+changed files and there is currently no automatic cleanup.
+
+```
+$ mvn clean package
+$ docker build --rm -t springett/nvdmirror .
+$ mkdir target/docs
+$ docker run -dit \
+  --name mirror \
+  -p 80:80 \
+  --mount type=bind,source="$(pwd)"/target/docs/,target=/usr/local/apache2/htdocs \
+  springett/nvdmirror
+```
+
+The httpd server will take a minute to spin up as it is mirroring the initial NVD files.
+
 Related Projects
 ----------------
 
