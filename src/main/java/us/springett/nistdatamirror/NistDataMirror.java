@@ -17,10 +17,13 @@ package us.springett.nistdatamirror;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -99,9 +102,9 @@ public class NistDataMirror {
             doDownload(CVE_JSON_10_MODIFIED_URL);
         }
         for (int i = START_YEAR; i <= END_YEAR; i++) {
-            String cveBaseUrl = CVE_BASE_META.replace("%d", String.valueOf(i));
-            doDownload(cveBaseUrl);
-            
+            String cveBaseMetaUrl = CVE_BASE_META.replace("%d", String.valueOf(i));
+            doDownload(cveBaseMetaUrl);
+
             if (xml) {
                 String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
                 String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
@@ -129,13 +132,23 @@ public class NistDataMirror {
         return 0;
     }
 
-    private void doDownload(String cveUrl) {
+    private MetaProperties readLocalMetaForURL(URL url) throws MirrorException {
+        MetaProperties meta = null;
+        String filename = url.getFile();
+        filename = filename.substring(filename.lastIndexOf('/') + 1);
+        File file = new File(outputDir, filename).getAbsoluteFile();
+        if (file.isFile()) {
+            meta = new MetaProperties(file);
+        }
+        return meta;
+    }
+
+    private void doDownload(URL url) {
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
         File file = null;
         boolean success = false;
         try {
-            URL url = new URL(cveUrl);
             String filename = url.getFile();
             filename = filename.substring(filename.lastIndexOf('/') + 1);
             file = new File(outputDir, filename).getAbsoluteFile();
