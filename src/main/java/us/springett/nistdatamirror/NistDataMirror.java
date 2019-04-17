@@ -30,8 +30,8 @@ import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
 /**
- * This self-contained class can be called from the command-line. It downloads the
- * contents of NVD CPE/CVE XML and JSON data to the specified output path.
+ * This self-contained class can be called from the command-line. It downloads
+ * the contents of NVD CPE/CVE XML and JSON data to the specified output path.
  *
  * @author Steve Springett (steve.springett@owasp.org)
  */
@@ -43,6 +43,8 @@ public class NistDataMirror {
     private static final String CVE_XML_20_BASE_URL = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%d.xml.gz";
     private static final String CVE_JSON_10_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz";
     private static final String CVE_JSON_10_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
+    private static final String CVE_MODIFIED_META = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.meta";
+    private static final String CVE_BASE_META = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.meta";
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
     private File outputDir;
@@ -50,33 +52,32 @@ public class NistDataMirror {
     private boolean json = true;
     private boolean xml = true;
 
-
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         // Ensure at least one argument was specified
-        if (args.length == 0 || args.length > 2 ) {
+        if (args.length == 0 || args.length > 2) {
             System.out.println("Usage: java NistDataMirror outputDir [xml|json]");
             return;
         }
-        String type = null; 
+        String type = null;
         if (args.length == 2) {
             type = args[1];
         }
         NistDataMirror nvd = new NistDataMirror(args[0], type);
         nvd.mirror();
         if (nvd.downloadFailed) {
-          System.exit(1);
+            System.exit(1);
         }
     }
 
     public NistDataMirror(String outputDirPath, String type) {
         outputDir = new File(outputDirPath);
-        if ( ! outputDir.exists()) {
+        if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
-        if ( type != null ) {
-            if ( type.equals("xml")) { 
+        if (type != null) {
+            if (type.equals("xml")) {
                 json = false;
-            } else if ( type.equals("json")) { 
+            } else if (type.equals("json")) {
                 xml = false;
             } else {
                 throw new IllegalArgumentException(String.format("Invalid type parameter '%s'. Usage: java NistDataMirror outputDir [xml|json]", type));
@@ -87,21 +88,27 @@ public class NistDataMirror {
     public void mirror() {
         Date currentDate = new Date();
         System.out.println("Downloading files at " + currentDate);
-        if ( xml ) {
+
+        doDownload(CVE_MODIFIED_META);
+
+        if (xml) {
             doDownload(CVE_XML_12_MODIFIED_URL);
             doDownload(CVE_XML_20_MODIFIED_URL);
         }
-        if ( json ) {
+        if (json) {
             doDownload(CVE_JSON_10_MODIFIED_URL);
         }
-        for (int i=START_YEAR; i<=END_YEAR; i++) {
-            if ( xml ) {
+        for (int i = START_YEAR; i <= END_YEAR; i++) {
+            String cveBaseUrl = CVE_BASE_META.replace("%d", String.valueOf(i));
+            doDownload(cveBaseUrl);
+            
+            if (xml) {
                 String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
                 String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
                 doDownload(cve12BaseUrl);
                 doDownload(cve20BaseUrl);
             }
-            if ( json ) {
+            if (json) {
                 String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
                 doDownload(cveJsonBaseUrl);
             }
@@ -111,7 +118,7 @@ public class NistDataMirror {
     private long checkHead(String cveUrl) {
         try {
             URL url = new URL(cveUrl);
-            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             connection.connect();
             connection.getInputStream();
@@ -159,15 +166,16 @@ public class NistDataMirror {
             close(bis);
             close(bos);
         }
-        if (file != null && success)
+        if (file != null && success) {
             uncompress(file);
+        }
     }
 
     private void uncompress(File file) {
         byte[] buffer = new byte[1024];
         GZIPInputStream gzis = null;
         FileOutputStream out = null;
-        try{
+        try {
             System.out.println("Uncompressing " + file.getName());
             gzis = new GZIPInputStream(new FileInputStream(file));
             out = new FileOutputStream(new File(file.getAbsolutePath().replaceAll(".gz", "")));
@@ -175,7 +183,7 @@ public class NistDataMirror {
             while ((len = gzis.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
             }
-        }catch(IOException ex){
+        } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
             close(gzis);
@@ -183,7 +191,7 @@ public class NistDataMirror {
         }
     }
 
-    private void close (Closeable object) {
+    private void close(Closeable object) {
         if (object != null) {
             try {
                 object.close();
