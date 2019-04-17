@@ -1,4 +1,16 @@
-.gradle
-.gradletasknamecache
-build/
 /target/
+# Intellij project files
+*.iml
+*.ipr
+*.iws
+.idea/
+# Eclipse project files
+.classpath
+.project
+.settings
+maven-eclipse.xml
+.externalToolBuilders
+.pmd
+# Netbeans configuration
+nb-configuration.xml
+**/nbproject/
