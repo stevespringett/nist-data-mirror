@@ -104,6 +104,12 @@ public class NistDataMirror {
             MetaProperties after = readLocalMetaForURL(CVE_MODIFIED_META);
             if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
                 if (xml) {
+                    System.out.println("---------------------------------------------------------");
+                    System.out.println("---------------------------------------------------------");
+                    System.out.println("WARNING: NVD CVE XML files are being mirrored - these files will be discontinued in the future; "
+                            + "see https://nvd.nist.gov/General/News/XML-Vulnerability-Feed-Retirement");
+                    System.out.println("---------------------------------------------------------");
+                    System.out.println("---------------------------------------------------------");
                     doDownload(CVE_XML_12_MODIFIED_URL);
                     doDownload(CVE_XML_20_MODIFIED_URL);
                 }
