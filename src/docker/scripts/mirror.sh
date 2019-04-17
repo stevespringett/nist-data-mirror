@@ -1,6 +1,6 @@
 #!/bin/sh
 
-files=`java -jar /usr/local/bin/nist-data-mirror.jar /tmp/nvd | grep -Eo 'Uncompressing.*' | grep -Eo '[^ ]*\.gz'`
+files=`java -jar /usr/local/bin/nist-data-mirror.jar /tmp/nvd | grep -Eo '(Download succeeded|Uncompressed).*' | grep -Eo '[^ ]*\.(gz|meta|json|xml)'`
 
 timestamp=$(date +%s)
 
