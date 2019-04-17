@@ -17,17 +17,15 @@ package us.springett.nistdatamirror;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
@@ -89,50 +87,62 @@ public class NistDataMirror {
     }
 
     public void mirror() {
-        Date currentDate = new Date();
-        System.out.println("Downloading files at " + currentDate);
-
-        doDownload(CVE_MODIFIED_META);
-
-        if (xml) {
-            doDownload(CVE_XML_12_MODIFIED_URL);
-            doDownload(CVE_XML_20_MODIFIED_URL);
-        }
-        if (json) {
-            doDownload(CVE_JSON_10_MODIFIED_URL);
-        }
-        for (int i = START_YEAR; i <= END_YEAR; i++) {
-            String cveBaseMetaUrl = CVE_BASE_META.replace("%d", String.valueOf(i));
-            doDownload(cveBaseMetaUrl);
-
-            if (xml) {
-                String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
-                String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
-                doDownload(cve12BaseUrl);
-                doDownload(cve20BaseUrl);
-            }
-            if (json) {
-                String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
-                doDownload(cveJsonBaseUrl);
-            }
-        }
-    }
-
-    private long checkHead(String cveUrl) {
         try {
-            URL url = new URL(cveUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("HEAD");
-            connection.connect();
-            connection.getInputStream();
-            return connection.getContentLengthLong();
-        } catch (IOException e) {
-            System.out.println("Failed to determine content length");
+            Date currentDate = new Date();
+            System.out.println("Downloading files at " + currentDate);
+
+            MetaProperties before = readLocalMetaForURL(CVE_MODIFIED_META);
+            if (before != null) {
+                long seconds = ZonedDateTime.now().toEpochSecond() - before.getLastModifiedDate();
+                long hours = seconds / 60 / 60;
+                if (hours < 2) {
+                    System.out.println("Using local NVD cache as last update was within two hours");
+                    return;
+                }
+            }
+            doDownload(CVE_MODIFIED_META);
+            MetaProperties after = readLocalMetaForURL(CVE_MODIFIED_META);
+            if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
+                if (xml) {
+                    doDownload(CVE_XML_12_MODIFIED_URL);
+                    doDownload(CVE_XML_20_MODIFIED_URL);
+                }
+                if (json) {
+                    doDownload(CVE_JSON_10_MODIFIED_URL);
+                }
+            }
+            for (int i = START_YEAR; i <= END_YEAR; i++) {
+                String cveBaseMetaUrl = CVE_BASE_META.replace("%d", String.valueOf(i));
+                before = readLocalMetaForURL(cveBaseMetaUrl);
+                doDownload(cveBaseMetaUrl);
+                after = readLocalMetaForURL(cveBaseMetaUrl);
+                if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
+                    if (xml) {
+                        String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
+                        String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
+                        doDownload(cve12BaseUrl);
+                        doDownload(cve20BaseUrl);
+                    }
+                    if (json) {
+                        String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
+                        doDownload(cveJsonBaseUrl);
+                    }
+                }
+            }
+        } catch (MirrorException ex) {
+            downloadFailed = true;
+            System.err.println("Error mirroring the NVD CVE data");
+            ex.printStackTrace(System.err);
         }
-        return 0;
     }
 
-    private MetaProperties readLocalMetaForURL(URL url) throws MirrorException {
+    private MetaProperties readLocalMetaForURL(String metaUrl) throws MirrorException {
+        URL url;
+        try {
+            url = new URL(metaUrl);
+        } catch (MalformedURLException ex) {
+            throw new MirrorException("Invalid url: " + metaUrl, ex);
+        }
         MetaProperties meta = null;
         String filename = url.getFile();
         filename = filename.substring(filename.lastIndexOf('/') + 1);
@@ -143,7 +153,13 @@ public class NistDataMirror {
         return meta;
     }
 
-    private void doDownload(URL url) {
+    private void doDownload(String nvdUrl) throws MirrorException {
+        URL url;
+        try {
+            url = new URL(nvdUrl);
+        } catch (MalformedURLException ex) {
+            throw new MirrorException("Invalid url: " + nvdUrl, ex);
+        }
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
         File file = null;
@@ -152,14 +168,6 @@ public class NistDataMirror {
             String filename = url.getFile();
             filename = filename.substring(filename.lastIndexOf('/') + 1);
             file = new File(outputDir, filename).getAbsoluteFile();
-
-            if (file.exists()) {
-                long fileSize = checkHead(cveUrl);
-                if (file.length() == fileSize) {
-                    System.out.println("Using cached version of " + filename);
-                    return;
-                }
-            }
 
             URLConnection connection = url.openConnection();
             System.out.println("Downloading " + url.toExternalForm());
@@ -180,7 +188,10 @@ public class NistDataMirror {
             close(bos);
         }
         if (file != null && success) {
-            uncompress(file);
+            System.out.println("Download succeeded " + file.getName());
+            if (file.getName().endsWith(".gz")) {
+                uncompress(file);
+            }
         }
     }
 
@@ -189,13 +200,14 @@ public class NistDataMirror {
         GZIPInputStream gzis = null;
         FileOutputStream out = null;
         try {
-            System.out.println("Uncompressing " + file.getName());
+            File outputFile = new File(file.getAbsolutePath().replaceAll(".gz", ""));
             gzis = new GZIPInputStream(new FileInputStream(file));
-            out = new FileOutputStream(new File(file.getAbsolutePath().replaceAll(".gz", "")));
+            out = new FileOutputStream(outputFile);
             int len;
             while ((len = gzis.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
             }
+            System.out.println("Uncompressed " + outputFile.getName());
         } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
