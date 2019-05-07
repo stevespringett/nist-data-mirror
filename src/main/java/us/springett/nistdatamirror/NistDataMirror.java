@@ -89,21 +89,33 @@ public class NistDataMirror {
         System.out.println("Downloading files at " + currentDate);
         if ( xml ) {
             doDownload(CVE_XML_12_MODIFIED_URL);
+            String metaUrl = CVE_XML_12_MODIFIED_URL.replace(".xml.gz", ".meta");
+            doDownload(metaUrl);
             doDownload(CVE_XML_20_MODIFIED_URL);
+            metaUrl = CVE_XML_20_MODIFIED_URL.replace(".xml.gz", ".meta");
+            doDownload(metaUrl);
         }
         if ( json ) {
             doDownload(CVE_JSON_10_MODIFIED_URL);
+            String metaUrl = CVE_JSON_10_MODIFIED_URL.replace(".json.gz", ".meta");
+            doDownload(metaUrl);
         }
         for (int i=START_YEAR; i<=END_YEAR; i++) {
             if ( xml ) {
                 String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(i));
                 String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(i));
                 doDownload(cve12BaseUrl);
+                String metaUrl = cve12BaseUrl.replace(".xml.gz", ".meta");
+                doDownload(metaUrl);
                 doDownload(cve20BaseUrl);
+                metaUrl = cve20BaseUrl.replace(".xml.gz", ".meta");
+                doDownload(metaUrl);
             }
             if ( json ) {
                 String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
                 doDownload(cveJsonBaseUrl);
+                String metaUrl = cveJsonBaseUrl.replace(".json.gz", ".meta");
+                doDownload(metaUrl);
             }
         }
     }
@@ -159,7 +171,7 @@ public class NistDataMirror {
             close(bis);
             close(bos);
         }
-        if (file != null && success)
+        if (file != null && success && file.getAbsolutePath().contains(".gz"))
             uncompress(file);
     }
 
