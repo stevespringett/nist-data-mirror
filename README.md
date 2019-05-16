@@ -42,7 +42,7 @@ for use. NIST Data Mirror is also available on the Maven Central Repository.
 <dependency>
     <groupId>us.springett</groupId>
     <artifactId>nist-data-mirror</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -56,13 +56,13 @@ changed files and there is currently no automatic cleanup.
 
 ```
 $ mvn clean package
-$ docker build --rm -t springett/nvdmirror .
+$ docker build --rm -t sspringett/nvdmirror .
 $ mkdir target/docs
 $ docker run -dit \
   --name mirror \
   -p 80:80 \
   --mount type=bind,source="$(pwd)"/target/docs/,target=/usr/local/apache2/htdocs \
-  springett/nvdmirror
+  sspringett/nvdmirror
 ```
 
 The httpd server will take a minute to spin up as it is mirroring the initial NVD files.
