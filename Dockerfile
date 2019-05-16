@@ -5,17 +5,17 @@ ARG BUILD_VERSION
 
 # Labels.
 LABEL maintainer="jeremy.long@gmail.com"
-LABEL name="springett/nvdmirror"
+LABEL name="sspringett/nvdmirror"
 LABEL version=$BUILD_VERSION
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
-LABEL org.label-schema.name="springett/nvdmirror"
+LABEL org.label-schema.name="sspringett/nvdmirror"
 LABEL org.label-schema.description="NIST Data Mirror"
 LABEL org.label-schema.url="https://github.com/stevespringett/nist-data-mirror"
 LABEL org.label-schema.vcs-url="https://github.com/ballerinalang/container-support"
-LABEL org.label-schema.vendor="springett"
+LABEL org.label-schema.vendor="sspringett"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -dit --name mirror -p 80:80 --mount type=bind,source=\"$(pwd)\"/target/docs/,target=/usr/local/apache2/htdocs springett/nvdmirror"
+LABEL org.label-schema.docker.cmd="docker run -dit --name mirror -p 80:80 --mount type=bind,source=\"$(pwd)\"/target/docs/,target=/usr/local/apache2/htdocs sspringett/nvdmirror"
 
 ENV user=mirror
 
