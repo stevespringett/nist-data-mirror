@@ -5,7 +5,7 @@
     <groupId>us.springett</groupId>
     <artifactId>nist-data-mirror</artifactId>
     <packaging>jar</packaging>
-    <version>1.3.0</version>
+    <version>1.3.1-SNAPSHOT</version>
 
     <name>NIST Data Mirror</name>
     <description>
@@ -53,7 +53,7 @@
         <connection>scm:git:git@github.com:stevespringett/nist-data-mirror.git</connection>
         <url>https://github.com/stevespringett/nist-data-mirror.git</url>
         <developerConnection>scm:git:git@github.com:stevespringett/nist-data-mirror.git</developerConnection>
-        <tag>nist-data-mirror-1.3.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
