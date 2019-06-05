@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.ZonedDateTime;
@@ -52,7 +54,8 @@ public class NistDataMirror {
     private boolean downloadFailed = false;
     private boolean json = true;
     private boolean xml = true;
-
+    private final Proxy proxy;
+    
     public static void main(String[] args) {
         // Ensure at least one argument was specified
         if (args.length == 0 || args.length > 2) {
@@ -84,6 +87,18 @@ public class NistDataMirror {
                 throw new IllegalArgumentException(String.format("Invalid type parameter '%s'. Usage: java NistDataMirror outputDir [xml|json]", type));
             }
         }
+        proxy = initProxy();
+    }
+
+    private Proxy initProxy() {
+        String proxyHost = System.getProperty("http.proxyHost");
+        String proxyPort = System.getProperty("http.proxyPort");
+        if (proxyHost != null && proxyPort != null) {
+            // throws NumberFormatException if proxy port is not numeric 
+            System.out.println("Using proxy " + proxyHost + ":" + proxyPort);
+            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.valueOf(proxyPort)));
+        }
+        return Proxy.NO_PROXY;
     }
 
     public void mirror() {
@@ -175,7 +190,7 @@ public class NistDataMirror {
             filename = filename.substring(filename.lastIndexOf('/') + 1);
             file = new File(outputDir, filename).getAbsoluteFile();
 
-            URLConnection connection = url.openConnection();
+            URLConnection connection = url.openConnection(proxy);
             System.out.println("Downloading " + url.toExternalForm());
             bis = new BufferedInputStream(connection.getInputStream());
             file = new File(outputDir, filename);
