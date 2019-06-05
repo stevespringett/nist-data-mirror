@@ -32,6 +32,8 @@ java -jar nist-data-mirror.jar <mirror-directory> [xml|json]
 ```
 Omitting filetype argument will result in both filetypes being downloaded.
 
+To use a proxy provide http.proxyHost / http.proxyPort system properties.
+
 Downloading
 ----------------
 
