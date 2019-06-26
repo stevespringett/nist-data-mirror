@@ -1,0 +1,21 @@
+nist:
+# Namespace you want to use. Default is "default" Namespace
+  namespace: owasp
+  service:
+# Type of service you want to create. e.g. Loadbalancer, Nodeport, etc. Default is LoadBalancer    
+    type: {}
+# Target port you want to use for your service. Default is port 80.    
+    targetPort: {}
+# Use below to provide any annotations for k8s cluster. 
+# E.g. If you have k8s cluster in using external-dns which creates DNS record for service
+#      use following annotation and provide DNS value.
+# Similarly, use annotation to create tags for your resource
+# Annotations are optional, if not provided, no annotations will be added for service.   
+    annotations: {}
+  image:
+# Provide url for Docker image. <Required> 
+    url: {}
+# Provide specific tag for docker image. If not provided, Default is "Latest".
+    tag: {}
+# Provide imagePullSecret used for pulling image from your docker registry.    
+    pullSecret: {}
