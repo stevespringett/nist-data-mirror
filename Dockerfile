@@ -3,6 +3,10 @@ FROM httpd:alpine
 ARG BUILD_DATE
 ARG BUILD_VERSION
 
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
 # Labels.
 LABEL maintainer="jeremy.long@gmail.com"
 LABEL name="sspringett/nvdmirror"
@@ -24,9 +28,13 @@ RUN apk update                                                              && \
     mkdir -p /var/log/cron                                                  && \
     mkdir -p /var/spool/cron/crontabs                                       && \
     mkdir /tmp/nvd                                                          && \
-    adduser -D ${user}                                                      && \
     touch /var/log/cron.log                                                 && \
-    rm -rf /var/lib/apt/lists/* /tmp/*
+    chgrp -R 0 /var                                                         && \
+    chmod -R g=u /var                                                       && \
+    chgrp -R 0 /usr/                                                        && \
+    chmod -R g=u /usr                                                       && \
+    chgrp -R 0 /tmp                                                         && \
+    chmod -R g=u /tmp                                                       
 
 RUN echo "Include conf/mirror.conf"                                         
 COPY /src/docker/scripts/* /
@@ -34,9 +42,8 @@ COPY /src/docker/crontab/* /var/spool/cron/crontabs/mirror
 COPY /src/docker/conf/mirror.conf /usr/local/apache2/conf
 COPY /target/nist-data-mirror.jar /usr/local/bin/
 
-EXPOSE 80/tcp
-
-#USER ${user}
+EXPOSE 8080/tcp
 
 ENTRYPOINT ["/entry.sh"]
 CMD ["/cmd.sh"]
+USER 1001
