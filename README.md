@@ -62,12 +62,19 @@ $ docker build --rm -t sspringett/nvdmirror .
 $ mkdir target/docs
 $ docker run -dit \
   --name mirror \
-  -p 80:80 \
+  -p 80:8080 \
   --mount type=bind,source="$(pwd)"/target/docs/,target=/usr/local/apache2/htdocs \
   sspringett/nvdmirror
 ```
 
 The httpd server will take a minute to spin up as it is mirroring the initial NVD files.
+
+To use a proxy during build time provide the `http_proxy`, `https_proxy` and `no_proxy` 
+environment variables as build arguments (e.g. `--build-arg http_proxy="${http_proxy}"`.
+For the runtime you can pass the `http.proxyHost` and `http.proxyPort` values as environment variables (`proxy_host`, `proxy_port`).
+
+The image is designed to be runned as a random non-root user and can be deployed on
+container orchestration platforms such as Kubernetes and OpenShift.
 
 Related Projects
 ----------------
