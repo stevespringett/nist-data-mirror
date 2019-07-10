@@ -4,8 +4,8 @@ nist:
   service:
 # Type of service you want to create. e.g. Loadbalancer, Nodeport, etc. Default is LoadBalancer    
     type: {}
-# Target port you want to use for your service. Default is port 80.    
-    targetPort: {}
+# Target port you want to use for your service. Default is port 8080.    
+    port: {}
 # Use below to provide any annotations for k8s cluster. 
 # E.g. If you have k8s cluster in using external-dns which creates DNS record for service
 #      use following annotation and provide DNS value.

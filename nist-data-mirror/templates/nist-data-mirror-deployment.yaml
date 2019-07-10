@@ -53,7 +53,7 @@ spec:
         image: {{ .Values.nist.image.url }}:{{ default "LATEST" .Values.nist.image.tag }}
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
+        - containerPort: {{ default "8080" .Values.nist.service.port }}
           protocol: TCP
         livenessProbe:
           httpGet:
