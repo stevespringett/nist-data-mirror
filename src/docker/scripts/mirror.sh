@@ -1,6 +1,6 @@
 #!/bin/sh
 
-files=`java -jar -Dhttp.proxyHost="${proxy_host}" -Dhttp.proxyPort="${proxy_port}" /usr/local/bin/nist-data-mirror.jar /tmp/nvd | grep -Eo '(Download succeeded|Uncompressed).*' | grep -Eo '[^ ]*\.(gz|meta|json|xml)'`
+files=`java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -jar -Dhttp.proxyHost="${proxy_host}" -Dhttp.proxyPort="${proxy_port}" /usr/local/bin/nist-data-mirror.jar /tmp/nvd | grep -Eo '(Download succeeded|Uncompressed).*' | grep -Eo '[^ ]*\.(gz|meta|json|xml)'`
 
 timestamp=$(date +%s)
 
