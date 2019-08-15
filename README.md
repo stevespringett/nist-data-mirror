@@ -51,7 +51,7 @@ for use. NIST Data Mirror is also available on the Maven Central Repository.
 Docker
 ----------------
 
-A dockerfile was created, but the image has not been pushed. This was created to 
+A Dockerfile is included, and the image is available on Docker Hub as [sspringett/nvdmirror](https://hub.docker.com/r/sspringett/nvdmirror). This was created to 
 assist in debugging other issues. While the image does create an httpd instance 
 that mirrors the NVD CVE data feeds - note that it also creates a backup for all 
 changed files and there is currently no automatic cleanup.
