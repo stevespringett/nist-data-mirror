@@ -35,7 +35,7 @@
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
         <maven.github.release.plugin.version>1.2.0</maven.github.release.plugin.version>
-        <dockerfile.maven.plugin>1.4.9</dockerfile.maven.plugin>
+        <dockerfile.maven.plugin>1.4.12</dockerfile.maven.plugin>
     </properties>
 
     <developers>
