@@ -40,4 +40,4 @@ COPY ["/target/nist-data-mirror.jar", "/usr/local/bin/"]
 
 EXPOSE 80/tcp
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf", "-l", "/var/log/supervisord.log", "-j", "/var/run/supervisord.pid"]
