@@ -23,27 +23,21 @@ LABEL org.label-schema.docker.cmd="docker run -dit --name mirror -p 80:80 --moun
 
 ENV user=mirror
 
-RUN apk update                                                              && \
-    apk add --no-cache openjdk8-jre dcron nss                               && \
-    mkdir -p /var/log/cron                                                  && \
-    mkdir -p /var/spool/cron/crontabs                                       && \
-    mkdir /tmp/nvd                                                          && \
-    touch /var/log/cron.log                                                 && \
-    chgrp -R 0 /var                                                         && \
-    chmod -R g=u /var                                                       && \
-    chgrp -R 0 /usr/                                                        && \
-    chmod -R g=u /usr                                                       && \
-    chgrp -R 0 /tmp                                                         && \
-    chmod -R g=u /tmp                                                       
+RUN apk update                                               && \
+    apk add --no-cache openjdk8-jre dcron nss supervisor     && \
+    addgroup -S $user                                        && \
+    adduser -S $user -G $user                                && \
+    mkdir -p /tmp/nvd                                        && \
+    chown -R $user:$user /tmp/nvd                            && \
+    chown -R $user:$user /usr/local/apache2/htdocs           && \
+    rm -v /usr/local/apache2/htdocs/index.html
 
-RUN echo "Include conf/mirror.conf"                                         
-COPY /src/docker/scripts/* /
-COPY /src/docker/crontab/* /var/spool/cron/crontabs/mirror
-COPY /src/docker/conf/mirror.conf /usr/local/apache2/conf
-COPY /target/nist-data-mirror.jar /usr/local/bin/
+COPY ["/src/docker/conf/supervisord.conf", "/etc/supervisor/conf.d/supervisord.conf"]
+COPY ["/src/docker/scripts/mirror.sh", "/mirror.sh"]
+COPY ["/src/docker/crontab/mirror", "/etc/crontabs/mirror"]
+COPY ["/src/docker/conf/mirror.conf", "/usr/local/apache2/conf"]
+COPY ["/target/nist-data-mirror.jar", "/usr/local/bin/"]
 
-EXPOSE 8080/tcp
+EXPOSE 80/tcp
 
-ENTRYPOINT ["/entry.sh"]
-CMD ["/cmd.sh"]
-USER 1001
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
