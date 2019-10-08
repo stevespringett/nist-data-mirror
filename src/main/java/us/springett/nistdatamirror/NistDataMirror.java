@@ -27,6 +27,9 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,12 +54,13 @@ public class NistDataMirror {
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
     private File outputDir;
+    private Path downloadDir;
     private boolean downloadFailed = false;
     private boolean json = true;
     private boolean xml = true;
     private final Proxy proxy;
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // Ensure at least one argument was specified
         if (args.length == 0 || args.length > 2) {
             System.out.println("Usage: java NistDataMirror outputDir [xml|json]");
@@ -73,11 +77,12 @@ public class NistDataMirror {
         }
     }
 
-    public NistDataMirror(String outputDirPath, String type) {
+    public NistDataMirror(String outputDirPath, String type) throws IOException {
         outputDir = new File(outputDirPath);
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
+        downloadDir = Files.createTempDirectory("nist-data-mirror-");
         if (type != null) {
             if (type.equals("xml")) {
                 json = false;
@@ -148,12 +153,24 @@ public class NistDataMirror {
                         String cveJsonBaseUrl = CVE_JSON_10_BASE_URL.replace("%d", String.valueOf(i));
                         doDownload(cveJsonBaseUrl);
                     }
+                    // TODO Move CVE_BASE_META to outputDir
                 }
             }
         } catch (MirrorException ex) {
             downloadFailed = true;
             System.err.println("Error mirroring the NVD CVE data");
             ex.printStackTrace(System.err);
+        } finally {
+        	if (downloadDir != null && downloadDir.toFile().exists()) {
+        		for (File file : downloadDir.toFile().listFiles()) {
+        			if (downloadFailed) {
+        				file.delete();
+        			} else {
+        				file.renameTo(Paths.get(outputDir.getAbsolutePath(), file.getName()).toFile());
+        			}
+        		}
+        		downloadDir.toFile().delete();
+        	}
         }
     }
 
@@ -167,7 +184,7 @@ public class NistDataMirror {
         MetaProperties meta = null;
         String filename = url.getFile();
         filename = filename.substring(filename.lastIndexOf('/') + 1);
-        File file = new File(outputDir, filename).getAbsoluteFile();
+        File file = new File(downloadDir.toFile(), filename).getAbsoluteFile();
         if (file.isFile()) {
             meta = new MetaProperties(file);
         }
@@ -188,12 +205,12 @@ public class NistDataMirror {
         try {
             String filename = url.getFile();
             filename = filename.substring(filename.lastIndexOf('/') + 1);
-            file = new File(outputDir, filename).getAbsoluteFile();
+            file = new File(downloadDir.toFile(), filename).getAbsoluteFile();
 
             URLConnection connection = url.openConnection(proxy);
             System.out.println("Downloading " + url.toExternalForm());
             bis = new BufferedInputStream(connection.getInputStream());
-            file = new File(outputDir, filename);
+            file = new File(downloadDir.toFile(), filename);
             bos = new BufferedOutputStream(new FileOutputStream(file));
 
             int i;
