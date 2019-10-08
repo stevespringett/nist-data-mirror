@@ -93,7 +93,7 @@ public class NistDataMirror {
     private Proxy initProxy() {
         String proxyHost = System.getProperty("http.proxyHost");
         String proxyPort = System.getProperty("http.proxyPort");
-        if (proxyHost != null && !"".equals(proxyHost) && proxyPort != null && !"".equals(proxyPort)) {
+        if (proxyHost != null && !proxyHost.trim().isEmpty() && proxyPort != null && !proxyPort.trim().isEmpty()) {
             // throws NumberFormatException if proxy port is not numeric 
             System.out.println("Using proxy " + proxyHost + ":" + proxyPort);
             return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.valueOf(proxyPort)));
