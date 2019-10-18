@@ -36,38 +36,31 @@ import java.util.zip.GZIPInputStream;
 
 /**
  * This self-contained class can be called from the command-line. It downloads
- * the contents of NVD CPE/CVE XML and JSON data to the specified output path.
+ * the contents of NVD CPE/CVE JSON data to the specified output path.
  *
  * @author Steve Springett (steve.springett@owasp.org)
  */
 public class NistDataMirror {
 
-    private static final String CVE_XML_12_MODIFIED_URL = "https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-modified.xml.gz";
-    private static final String CVE_XML_20_MODIFIED_URL = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-modified.xml.gz";
-    private static final String CVE_XML_12_BASE_URL = "https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-%d.xml.gz";
-    private static final String CVE_XML_20_BASE_URL = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%d.xml.gz";
-    
     private static final String CVE_JSON_10_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz";
     private static final String CVE_JSON_10_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
     private static final String CVE_MODIFIED_10_META = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.meta";
     private static final String CVE_BASE_10_META = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.meta";
-    
+
     private static final String CVE_JSON_11_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz";
     private static final String CVE_JSON_11_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz";
     private static final String CVE_MODIFIED_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.meta";
     private static final String CVE_BASE_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.meta";
-    
+
     private static final Map<String, Map<String, String>> versionToFilenameMaps = new HashMap<>();
-    
+
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
-    
+
     private File outputDir;
     private boolean downloadFailed = false;
-    private boolean json = true;
-    private boolean xml = true;
     private final Proxy proxy;
-    
+
     {
     	Map<String, String> version10Filenames = new HashMap<>();
     	version10Filenames.put("cveJsonModifiedUrl", CVE_JSON_10_MODIFIED_URL);
@@ -83,18 +76,14 @@ public class NistDataMirror {
     	version11Filenames.put("cveBaseMeta", CVE_BASE_11_META);
     	versionToFilenameMaps.put("1.1", version11Filenames);
     }
-    
+
     public static void main(String[] args) {
         // Ensure at least one argument was specified
         if (args.length == 0 || args.length > 2) {
-            System.out.println("Usage: java NistDataMirror outputDir [xml|json]");
+            System.out.println("Usage: java NistDataMirror outputDir");
             return;
         }
-        String type = null;
-        if (args.length == 2) {
-            type = args[1];
-        }
-        NistDataMirror nvd = new NistDataMirror(args[0], type);
+        NistDataMirror nvd = new NistDataMirror(args[0]);
         nvd.mirror("1.0");
         nvd.mirror("1.1");
         if (nvd.downloadFailed) {
@@ -102,19 +91,10 @@ public class NistDataMirror {
         }
     }
 
-    public NistDataMirror(String outputDirPath, String type) {
+    public NistDataMirror(String outputDirPath) {
         outputDir = new File(outputDirPath);
         if (!outputDir.exists()) {
             outputDir.mkdirs();
-        }
-        if (type != null) {
-            if (type.equals("xml")) {
-                json = false;
-            } else if (type.equals("json")) {
-                xml = false;
-            } else {
-                throw new IllegalArgumentException(String.format("Invalid type parameter '%s'. Usage: java NistDataMirror outputDir [xml|json]", type));
-            }
         }
         proxy = initProxy();
     }
@@ -123,7 +103,7 @@ public class NistDataMirror {
         String proxyHost = System.getProperty("http.proxyHost");
         String proxyPort = System.getProperty("http.proxyPort");
         if (proxyHost != null && !proxyHost.trim().isEmpty() && proxyPort != null && !proxyPort.trim().isEmpty()) {
-            // throws NumberFormatException if proxy port is not numeric 
+            // throws NumberFormatException if proxy port is not numeric
             System.out.println("Using proxy " + proxyHost + ":" + proxyPort);
             return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.valueOf(proxyPort)));
         }
@@ -147,19 +127,7 @@ public class NistDataMirror {
             doDownload(versionToFilenameMaps.get(version).get("cveModifiedMeta"));
             MetaProperties after = readLocalMetaForURL(versionToFilenameMaps.get(version).get("cveModifiedMeta"));
             if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
-                if (xml) {
-                    System.out.println("---------------------------------------------------------");
-                    System.out.println("---------------------------------------------------------");
-                    System.out.println("WARNING: NVD CVE XML files are being mirrored - these files will be discontinued in the future; "
-                            + "see https://nvd.nist.gov/General/News/XML-Vulnerability-Feed-Retirement");
-                    System.out.println("---------------------------------------------------------");
-                    System.out.println("---------------------------------------------------------");
-                    doDownload(CVE_XML_12_MODIFIED_URL);
-                    doDownload(CVE_XML_20_MODIFIED_URL);
-                }
-                if (json) {
-                    doDownload(versionToFilenameMaps.get(version).get("cveJsonModifiedUrl"));
-                }
+                doDownload(versionToFilenameMaps.get(version).get("cveJsonModifiedUrl"));
             }
             for (int year = START_YEAR; year <= END_YEAR; year++) {
                 downloadVersionForYear(version, year);
@@ -179,16 +147,8 @@ public class NistDataMirror {
 		doDownload(cveBaseMetaUrl);
 		after = readLocalMetaForURL(cveBaseMetaUrl);
 		if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
-		    if (xml) {
-		        String cve12BaseUrl = CVE_XML_12_BASE_URL.replace("%d", String.valueOf(year));
-		        String cve20BaseUrl = CVE_XML_20_BASE_URL.replace("%d", String.valueOf(year));
-		        doDownload(cve12BaseUrl);
-		        doDownload(cve20BaseUrl);
-		    }
-		    if (json) {
-		        String cveJsonBaseUrl = versionToFilenameMaps.get(version).get("cveJsonBaseUrl").replace("%d", String.valueOf(year));
-		        doDownload(cveJsonBaseUrl);
-		    }
+		    String cveJsonBaseUrl = versionToFilenameMaps.get(version).get("cveJsonBaseUrl").replace("%d", String.valueOf(year));
+		    doDownload(cveJsonBaseUrl);
 		}
 	}
 
