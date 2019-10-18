@@ -9,7 +9,7 @@
 
     <name>NIST Data Mirror</name>
     <description>
-        NIST Data Mirror is a Java command-line utility that mirrors the NVD CPE/CVE XML and JSON
+        NIST Data Mirror is a Java command-line utility that mirrors the NVD CPE/CVE JSON
         data from NIST. The intended purpose of nist-data-mirror is to be able to replicate the
         NIST vulnerabiity data inside a company firewall so that local (faster) access to NIST data
         can be achieved.
