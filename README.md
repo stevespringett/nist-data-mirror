@@ -62,7 +62,7 @@ $ docker build --rm -t sspringett/nvdmirror .
 $ mkdir target/docs
 $ docker run -dit \
   --name mirror \
-  -p 80:8080 \
+  -p 80:80 \
   --mount type=bind,source="$(pwd)"/target/docs/,target=/usr/local/apache2/htdocs \
   sspringett/nvdmirror
 ```
