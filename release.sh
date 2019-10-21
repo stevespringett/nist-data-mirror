@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
 export PATH=JAVA_HOME/bin:$PATH
 
 read -p "Really deploy to Maven Central repository (Y/N)? "
 if ( [ "$REPLY" == "Y" ] ) then
 
   # Retrieves the current version from the pom. This will likely be in the format: x.x.x-SNAPSHOT
-  CURRENT_VERSION=$(cat pom.xml | grep "^    <version>.*</version>$" | awk -F'[><]' '{print $3}')
+  CURRENT_VERSION=$(grep "^    <version>.*</version>$" pom.xml | awk -F'[><]' '{print $3}')
   # Define and remove the -SNAPSHOT suffix from CURRENT_VERSION and assign the result to RELEASE_VERSION
   suffix="-SNAPSHOT";
   RELEASE_VERSION=${CURRENT_VERSION%$suffix};
