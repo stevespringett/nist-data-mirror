@@ -32,13 +32,20 @@ spec:
         - name: http
           containerPort: 80
           protocol: TCP
+{{- if .Values.readinessProbe.enabled}}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+{{ toYaml .Values.readinessProbe.settings | indent 10 }}
+{{- end }}
+{{- if .Values.livenessProbe.enabled}}
         livenessProbe:
           httpGet:
-            scheme: HTTP
             path: /
-            port: 80
-          initialDelaySeconds: 360
-          timeoutSeconds: 360
+            port: http
+{{ toYaml .Values.livenessProbe.settings | indent 10 }}
+{{- end }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:

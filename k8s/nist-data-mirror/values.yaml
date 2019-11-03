@@ -72,6 +72,27 @@ resources: {}
   #    cpu: 100m
   #    memory: 32Mi
 
+# Liveness and readiness probe values
+## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+##
+livenessProbe:
+  enabled: true
+  settings:
+    initialDelaySeconds: 120
+    timeoutSeconds: 1
+    periodSeconds: 30
+    successThreshold: 1
+    failureThreshold: 10
+
+readinessProbe:
+  enabled: true
+  settings:
+    initialDelaySeconds: 20
+    timeoutSeconds: 1
+    periodSeconds: 30
+    successThreshold: 1
+    failureThreshold: 3
+
 nodeSelector: {}
 
 tolerations: []
