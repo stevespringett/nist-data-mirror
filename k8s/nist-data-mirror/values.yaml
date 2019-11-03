@@ -11,7 +11,7 @@ image:
 replicaCount: 1
 
 service:
-  # Type of service you want to create. e.g. Loadbalancer, Nodeport, etc. Default is LoadBalancer
+  # Type of service you want to create. e.g. Loadbalancer, Nodeport, etc.
   type: ClusterIP
   # Target port you want to use for your service.
   port: 8080
