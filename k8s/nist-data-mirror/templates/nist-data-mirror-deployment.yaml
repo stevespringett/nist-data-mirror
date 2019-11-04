@@ -15,50 +15,81 @@
 */}}
 {{ $uuid := uuidv4 }} {{/* force uniqueness for every execution of helm */}}
 ---
-
 kind: Deployment
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 metadata:
   # This uses a "fullname" template (see _helpers)
   # Basing names on .Release.Name means that the same chart can be installed
   # multiple times into the same namespace.
   name: {{ template "nist-data-mirror.fullname" . }}
   labels:
-    heritage: {{ .Release.Service | trunc 63 | quote }}
-    release: {{ .Release.Name | trunc 63 |  quote }}
-    chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | trunc 63 | quote }}
-    revision: {{ .Release.Revision | quote }}
-    appVersion: {{ .Chart.AppVersion | trunc 63 | quote }}
-    k8s-app: {{ .Chart.Name }}
-    kubernetes.io/cluster-service: "true"
+    app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
+    helm.sh/chart: {{ include "nist-data-mirror.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     uuid: {{ $uuid | quote }}
-  namespace: {{ default "default" .Values.nist.namespace }}
 spec:
-  replicas: 1
-  revisionHistoryLimit: 10
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
-      k8s-app: {{ .Chart.Name }}
+      app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        k8s-app: {{ .Chart.Name }}
+        app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-{{- if .Values.nist.image.pullSecret }}             
+{{- if .Values.image.pullSecret }}             
       imagePullSecrets:   
-      - name: {{ .Values.nist.image.pullSecret }}
+      - name: {{ .Values.image.pullSecret }}
 {{- end }}      
       containers:
       - name: {{ .Chart.Name }}
-        image: {{ .Values.nist.image.url }}:{{ default "LATEST" .Values.nist.image.tag }}
-        imagePullPolicy: IfNotPresent
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: {{ default "8080" .Values.nist.service.port }}
+        - name: http
+          containerPort: 80
           protocol: TCP
+{{- if .Values.readinessProbe.enabled}}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+{{ toYaml .Values.readinessProbe.settings | indent 10 }}
+{{- end }}
+{{- if .Values.livenessProbe.enabled}}
         livenessProbe:
           httpGet:
-            scheme: HTTP
             path: /
-            port: 80
-          initialDelaySeconds: 360
-          timeoutSeconds: 360
+            port: http
+{{ toYaml .Values.livenessProbe.settings | indent 10 }}
+{{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        volumeMounts:
+        - name: nist-data
+          mountPath: /usr/local/apache2/htdocs
+          subPath: htdocs
+      volumes:
+        - name: nist-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.data.existingClaim }}{{ .Values.persistence.data.existingClaim }}{{- else }}{{ template "nist-data-mirror.fullname" . }}-data{{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

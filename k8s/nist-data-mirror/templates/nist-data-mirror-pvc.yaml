@@ -15,26 +15,30 @@
 */}}
 {{ $uuid := uuidv4 }} {{/* force uniqueness for every execution of helm */}}
 ---
+{{- if .Values.persistence.enabled -}}
+{{- if not .Values.persistence.data.existingClaim -}}
+kind: PersistentVolumeClaim
 apiVersion: v1
-kind: Service
 metadata:
-  name: {{ template "nist-data-mirror.fullname" . }}
+  name: {{ template "nist-data-mirror.fullname" . }}-data
   labels:
     app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
     helm.sh/chart: {{ include "nist-data-mirror.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     uuid: {{ $uuid | quote }}
-{{- if .Values.service.annotations }}
-  annotations:
-{{- toYaml .Values.service.annotations | nindent 4 }}
-{{- end }}
 spec:
-  type: {{ .Values.service.type }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
-      name: http
-  selector:
-    app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
+  accessModes:
+    - {{ .Values.persistence.data.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.data.size | quote }}
+{{- if .Values.persistence.data.storageClass }}
+{{- if (eq "-" .Values.persistence.data.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.persistence.data.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end -}}
+{{- end -}}
