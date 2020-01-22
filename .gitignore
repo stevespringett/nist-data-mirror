@@ -13,3 +13,4 @@ maven-eclipse.xml
 .pmd
 # Netbeans configuration
 nb-configuration.xml
+*.tgz

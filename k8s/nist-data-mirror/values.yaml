@@ -99,3 +99,20 @@ tolerations: []
 
 affinity: {}
 
+volumes: {}
+  # Configure any addtional volumes need to be attached to the pod
+  # - name: certificates
+  #   hostPath:
+  #     path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+  #     type: File
+
+
+volumeMounts: {}
+  # Configure any addtional volumes need to be attached to the containers
+  # - name: certificates
+  #   mountPath: /etc/ssl/cert.pem
+
+dnsConfig: {}
+  # options:
+  #   - name: ndots
+  #     value: "1"
