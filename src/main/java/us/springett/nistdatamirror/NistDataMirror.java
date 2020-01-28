@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -105,6 +107,25 @@ public class NistDataMirror {
         if (proxyHost != null && !proxyHost.trim().isEmpty() && proxyPort != null && !proxyPort.trim().isEmpty()) {
             // throws NumberFormatException if proxy port is not numeric
             System.out.println("Using proxy " + proxyHost + ":" + proxyPort);
+	    
+            String proxyUser = System.getProperty("http.proxyUser");
+            String proxyPassword = System.getProperty("http.proxyPassword");
+            if (proxyUser != null && !proxyUser.trim().isEmpty() && proxyPassword != null && !proxyPassword.trim().isEmpty()) {
+
+                System.out.println("Using proxy user" + proxyUser + ":" + proxyPassword);
+
+                Authenticator authenticator = new Authenticator() {
+
+                   public PasswordAuthentication getPasswordAuthentication() {
+                       return (new PasswordAuthentication(proxyUser,
+                             proxyPassword.toCharArray()));
+                   }
+			
+                };
+                Authenticator.setDefault(authenticator);
+            }
+
+		
             return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.valueOf(proxyPort)));
         }
         return Proxy.NO_PROXY;
