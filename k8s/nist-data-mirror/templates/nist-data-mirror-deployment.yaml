@@ -70,10 +70,16 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
+          {{- with .Values.volumeMounts }}
+{{- toYaml . | nindent 8 }}
+          {{- end }}
         - name: nist-data
           mountPath: /usr/local/apache2/htdocs
           subPath: htdocs
       volumes:
+        {{- with .Values.volumes }}
+{{- toYaml . | nindent 8 }}
+        {{- end }}
         - name: nist-data
           {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
@@ -93,3 +99,9 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+    {{- with .Values.dnsConfig }}
+      dnsConfig:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+

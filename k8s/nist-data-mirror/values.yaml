@@ -99,3 +99,20 @@ tolerations: []
 
 affinity: {}
 
+volumes: {}
+  # Configure any addtional volumes need to be attached to the pod
+  # - name: certificates
+  #   hostPath:
+  #     path: /etc/pki
+  #     type: Directory
+
+
+volumeMounts: {}
+  # Configure any addtional volumes need to be attached to the containers
+  # - name: certificates
+  #   mountPath: /etc/pki
+
+dnsConfig: {}
+  # options:
+  #   - name: ndots
+  #     value: "1"
