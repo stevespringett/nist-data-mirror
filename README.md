@@ -43,7 +43,7 @@ for use. NIST Data Mirror is also available on the Maven Central Repository.
 <dependency>
     <groupId>us.springett</groupId>
     <artifactId>nist-data-mirror</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
 </dependency>
 ```
 
@@ -72,7 +72,7 @@ To use a proxy during build time provide the `http_proxy`, `https_proxy` and `no
 environment variables as build arguments (e.g. `--build-arg http_proxy="${http_proxy}"`.
 For the runtime you can pass the `http.proxyHost` and `http.proxyPort` values as environment variables (`proxy_host`, `proxy_port`).
 
-The image is designed to be runned as a random non-root user and can be deployed on
+The image is designed to be executed as a random non-root user and can be deployed on
 container orchestration platforms such as Kubernetes and OpenShift.
 
 Related Projects

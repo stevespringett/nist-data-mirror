@@ -5,7 +5,7 @@
     <groupId>us.springett</groupId>
     <artifactId>nist-data-mirror</artifactId>
     <packaging>jar</packaging>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
 
     <name>NIST Data Mirror</name>
     <description>
@@ -48,7 +48,7 @@
             </snapshots>
         </repository>
     </repositories>
-    
+
     <properties>
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
         <maven.compiler.source>1.8</maven.compiler.source>
