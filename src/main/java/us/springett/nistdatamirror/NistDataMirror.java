@@ -44,33 +44,18 @@ import java.util.zip.GZIPInputStream;
  */
 public class NistDataMirror {
 
-    private static final String CVE_JSON_10_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.json.gz";
-    private static final String CVE_JSON_10_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz";
-    private static final String CVE_MODIFIED_10_META = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-modified.meta";
-    private static final String CVE_BASE_10_META = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.meta";
-
     private static final String CVE_JSON_11_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz";
     private static final String CVE_JSON_11_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz";
     private static final String CVE_MODIFIED_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.meta";
     private static final String CVE_BASE_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.meta";
-
     private static final Map<String, Map<String, String>> versionToFilenameMaps = new HashMap<>();
-
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
-
     private File outputDir;
     private boolean downloadFailed = false;
     private final Proxy proxy;
 
     {
-    	Map<String, String> version10Filenames = new HashMap<>();
-    	version10Filenames.put("cveJsonModifiedUrl", CVE_JSON_10_MODIFIED_URL);
-    	version10Filenames.put("cveJsonBaseUrl", CVE_JSON_10_BASE_URL);
-    	version10Filenames.put("cveModifiedMeta", CVE_MODIFIED_10_META);
-    	version10Filenames.put("cveBaseMeta", CVE_BASE_10_META);
-    	versionToFilenameMaps.put("1.0", version10Filenames);
-
     	Map<String, String> version11Filenames = new HashMap<>();
     	version11Filenames.put("cveJsonModifiedUrl", CVE_JSON_11_MODIFIED_URL);
     	version11Filenames.put("cveJsonBaseUrl", CVE_JSON_11_BASE_URL);
@@ -86,7 +71,6 @@ public class NistDataMirror {
             return;
         }
         NistDataMirror nvd = new NistDataMirror(args[0]);
-        nvd.mirror("1.0");
         nvd.mirror("1.1");
         if (nvd.downloadFailed) {
             System.exit(1);
@@ -107,25 +91,20 @@ public class NistDataMirror {
         if (proxyHost != null && !proxyHost.trim().isEmpty() && proxyPort != null && !proxyPort.trim().isEmpty()) {
             // throws NumberFormatException if proxy port is not numeric
             System.out.println("Using proxy " + proxyHost + ":" + proxyPort);
-	    
             String proxyUser = System.getProperty("http.proxyUser");
             String proxyPassword = System.getProperty("http.proxyPassword");
             if (proxyUser != null && !proxyUser.trim().isEmpty() && proxyPassword != null && !proxyPassword.trim().isEmpty()) {
-
                 System.out.println("Using proxy user" + proxyUser + ":" + proxyPassword);
-
                 Authenticator authenticator = new Authenticator() {
 
                    public PasswordAuthentication getPasswordAuthentication() {
                        return (new PasswordAuthentication(proxyUser,
                              proxyPassword.toCharArray()));
                    }
-			
+
                 };
                 Authenticator.setDefault(authenticator);
             }
-
-		
             return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.valueOf(proxyPort)));
         }
         return Proxy.NO_PROXY;
@@ -135,7 +114,6 @@ public class NistDataMirror {
         try {
             Date currentDate = new Date();
             System.out.println("Downloading files at " + currentDate);
-
             MetaProperties before = readLocalMetaForURL(versionToFilenameMaps.get(version).get("cveModifiedMeta"));
             if (before != null) {
                 long seconds = ZonedDateTime.now().toEpochSecond() - before.getLastModifiedDate();
