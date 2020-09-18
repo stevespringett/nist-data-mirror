@@ -81,7 +81,7 @@ public class NistDataMirror {
 
     public static void main(String[] args) {
         // Ensure at least one argument was specified
-        if (args.length == 0 || args.length > 2) {
+        if (args.length != 1) {
             System.out.println("Usage: java NistDataMirror outputDir");
             return;
         }
