@@ -44,6 +44,15 @@ import java.util.zip.GZIPInputStream;
  */
 public class NistDataMirror {
 
+    /**
+     * Exit code used when download failed.
+     */
+    private static final int EXIT_CODE_DOWNLOAD_FAILED = 1;
+    /**
+     * Exit code used when tool was invoked with wrong arguments.
+     */
+    private static final int EXIT_CODE_WRONG_INVOCATION = 2;
+
     private static final String CVE_JSON_11_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz";
     private static final String CVE_JSON_11_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz";
     private static final String CVE_MODIFIED_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.meta";
@@ -68,12 +77,13 @@ public class NistDataMirror {
         // Ensure at least one argument was specified
         if (args.length != 1) {
             System.out.println("Usage: java NistDataMirror outputDir");
+            System.exit(EXIT_CODE_WRONG_INVOCATION);
             return;
         }
         NistDataMirror nvd = new NistDataMirror(args[0]);
         nvd.mirror("1.1");
         if (nvd.downloadFailed) {
-            System.exit(1);
+            System.exit(EXIT_CODE_DOWNLOAD_FAILED);
         }
     }
 
@@ -105,7 +115,7 @@ public class NistDataMirror {
                 };
                 Authenticator.setDefault(authenticator);
             }
-            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.valueOf(proxyPort)));
+            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.parseInt(proxyPort)));
         }
         return Proxy.NO_PROXY;
     }
