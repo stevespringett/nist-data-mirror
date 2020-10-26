@@ -1,6 +1,6 @@
 [![Build Status](https://github.com/stevespringett/nist-data-mirror/workflows/Maven%20CI/badge.svg)](https://github.com/stevespringett/nist-data-mirror/actions?workflow=Maven+CI)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/21c46e93bdbe4e6f99085da9ece477e3)](https://www.codacy.com/app/stevespringett/nist-data-mirror?utm_source=github.com&utm_medium=referral&utm_content=stevespringett/nist-data-mirror&utm_campaign=Badge_Grade)
-[![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)][apache 2.0]
+[![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](https://github.com/stevespringett/nist-data-mirror/blob/master/LICENSE)
 
 # NIST Data Mirror
 
