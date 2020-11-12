@@ -76,7 +76,7 @@ public class NistDataMirror {
     public static void main(String[] args) {
         // Ensure at least one argument was specified
         if (args.length != 1) {
-            System.out.println("Usage: java NistDataMirror outputDir");
+            System.out.println("Usage Error: Please only provide the output directory as parameter in the form: 'java nist-data-mirror.jar outputDir'");
             System.exit(EXIT_CODE_WRONG_INVOCATION);
             return;
         }
