@@ -1,1 +1,1 @@
-0 */4 * * * /mirror.sh
+0 */4 * * * /mirror.sh >> /proc/1/fd/1 2>&1
