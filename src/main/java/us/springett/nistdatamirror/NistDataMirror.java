@@ -108,7 +108,7 @@ public class NistDataMirror {
             String proxyUser = System.getProperty("http.proxyUser");
             String proxyPassword = System.getProperty("http.proxyPassword");
             if (proxyUser != null && !proxyUser.trim().isEmpty() && proxyPassword != null && !proxyPassword.trim().isEmpty()) {
-                System.out.println("Using proxy user" + proxyUser + ":" + proxyPassword);
+                System.out.println("Using proxy user " + proxyUser + ":" + proxyPassword);
                 Authenticator authenticator = new Authenticator() {
 
                    public PasswordAuthentication getPasswordAuthentication() {
