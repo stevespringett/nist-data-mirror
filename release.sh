@@ -27,7 +27,5 @@ REPO=sspringett/nvdmirror
 docker rm nvdmirror
 docker rmi $REPO:latest
 docker rmi $REPO:$RELEASE_VERSION
-docker build -f Dockerfile --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') -t $REPO:$RELEASE_VERSION -t $REPO:latest .
 docker login
-docker push $REPO:latest
-docker push $REPO:$RELEASE_VERSION
+docker build -f Dockerfile --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') -t $REPO:$RELEASE_VERSION -t $REPO:latest --platform linux/amd64,linux/arm64 --push .
