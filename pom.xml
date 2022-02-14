@@ -60,7 +60,7 @@
         <maven.cyclonedx.plugin.version>2.5.3</maven.cyclonedx.plugin.version>
         <maven.javadoc.plugin.version>3.3.2</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
-        <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
+        <maven.jar.plugin.version>3.2.2</maven.jar.plugin.version>
         <maven.github.release.plugin.version>1.4.0</maven.github.release.plugin.version>
         <dockerfile.maven.plugin>1.4.13</dockerfile.maven.plugin>
     </properties>
