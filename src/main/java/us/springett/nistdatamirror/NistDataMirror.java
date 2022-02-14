@@ -54,8 +54,10 @@ public class NistDataMirror {
     private static final int EXIT_CODE_WRONG_INVOCATION = 2;
 
     private static final String CVE_JSON_11_MODIFIED_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz";
+    private static final String CVE_JSON_11_RECENT_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.json.gz";
     private static final String CVE_JSON_11_BASE_URL = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz";
     private static final String CVE_MODIFIED_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.meta";
+    private static final String CVE_RECENT_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.meta";
     private static final String CVE_BASE_11_META = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.meta";
     private static final Map<String, Map<String, String>> versionToFilenameMaps = new HashMap<>();
     private static final int START_YEAR = 2002;
@@ -67,8 +69,10 @@ public class NistDataMirror {
     {
     	Map<String, String> version11Filenames = new HashMap<>();
     	version11Filenames.put("cveJsonModifiedUrl", CVE_JSON_11_MODIFIED_URL);
+        version11Filenames.put("cveJsonRecentUrl", CVE_JSON_11_RECENT_URL);
     	version11Filenames.put("cveJsonBaseUrl", CVE_JSON_11_BASE_URL);
     	version11Filenames.put("cveModifiedMeta", CVE_MODIFIED_11_META);
+        version11Filenames.put("cveRecentMeta", CVE_RECENT_11_META);
     	version11Filenames.put("cveBaseMeta", CVE_BASE_11_META);
     	versionToFilenameMaps.put("1.1", version11Filenames);
     }
@@ -137,6 +141,12 @@ public class NistDataMirror {
             MetaProperties after = readLocalMetaForURL(versionToFilenameMaps.get(version).get("cveModifiedMeta"));
             if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
                 doDownload(versionToFilenameMaps.get(version).get("cveJsonModifiedUrl"));
+            }
+            before = readLocalMetaForURL(versionToFilenameMaps.get(version).get("cveRecentMeta"));
+            doDownload(versionToFilenameMaps.get(version).get("cveRecentMeta"));
+            after = readLocalMetaForURL(versionToFilenameMaps.get(version).get("cveRecentMeta"));
+            if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
+                doDownload(versionToFilenameMaps.get(version).get("cveJsonRecentUrl"));
             }
             for (int year = START_YEAR; year <= END_YEAR; year++) {
                 downloadVersionForYear(version, year);
