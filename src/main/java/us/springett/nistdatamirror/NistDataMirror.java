@@ -15,13 +15,10 @@
  */
 package us.springett.nistdatamirror;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Authenticator;
@@ -29,11 +26,13 @@ import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -150,11 +149,29 @@ public class NistDataMirror {
             }
             for (int year = START_YEAR; year <= END_YEAR; year++) {
                 downloadVersionForYear(version, year);
+                Boolean valid = validCheck(year);
+                System.out.println("File " + year + " is valid.");
+                if (Boolean.FALSE.equals(valid)){
+                    int i = 0;
+                    while (i < 2){
+                        downloadVersionForYear(version, year);
+                        Boolean valid2 = validCheck(year);
+                        i++;
+                        if (Boolean.TRUE.equals(valid2)){
+                            System.out.println("File " + year + " is valid.");
+                            break;
+                        }
+                    }
+                    System.out.println("The File " + year + " is corrupted");
+                }
             }
+
         } catch (MirrorException ex) {
             downloadFailed = true;
             System.err.println("Error mirroring the NVD CVE data");
             ex.printStackTrace(System.err);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -260,4 +277,42 @@ public class NistDataMirror {
             }
         }
     }
-}
+
+    /**
+     * This function checks, if the generated Hash of the json file matches the hashcode in the meta file
+     * @param year
+     * @return true or false
+     */
+    private Boolean validCheck(int year) {
+                try {
+                    int n = 4; // The line number where the hash is saved in the meta file
+                    String hashLine = Files.readAllLines(Paths.get(outputDir + "\\nvdcve-1.1-" + year + ".meta")).get(n);
+                    String metaHash = hashLine.substring(7);
+
+                    MessageDigest md = MessageDigest.getInstance("SHA-256");
+                    String hex = checksum(outputDir + "\\nvdcve-1.1-" + year + ".json", md);
+
+                    return metaHash.equals(hex);
+                } catch (IOException | NoSuchAlgorithmException ex) {
+                    ex.printStackTrace();
+                }
+        return null;
+    }
+
+    private static String checksum(String filepath, MessageDigest md) throws IOException {
+
+        // file hashing with DigestInputStream
+        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(filepath), md)) {
+            while (dis.read() != -1) ; //empty loop to clear the data
+            md = dis.getMessageDigest();
+        }
+
+        // bytes to hex
+        StringBuilder result = new StringBuilder();
+        for (byte b : md.digest()) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString().toUpperCase(Locale.ROOT);
+
+    }
+    }
