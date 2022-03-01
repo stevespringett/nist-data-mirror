@@ -16,7 +16,7 @@ if ( [ "$REPLY" == "Y" ] ) then
   NEXT_SNAPSHOT_VERSION=$NEXT_VERSION-SNAPSHOT
 
   mvn clean
-  mvn release:clean release:prepare release:perform -Prelease -X -e | tee release.log
+  mvn release:clean release:prepare release:perform -Prelease -e | tee release.log
 
 else
   echo -e "Exit without deploy"
