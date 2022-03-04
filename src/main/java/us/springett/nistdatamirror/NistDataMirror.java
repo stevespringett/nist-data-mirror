@@ -27,6 +27,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -285,12 +286,14 @@ public class NistDataMirror {
      */
     private Boolean validCheck(int year) {
                 try {
+                    Path metaFilePath = Paths.get(String.valueOf(outputDir), "nvdcve-1.1-" + year + ".meta");
                     int n = 4; // The line number where the hash is saved in the meta file
-                    String hashLine = Files.readAllLines(Paths.get(outputDir + "\\nvdcve-1.1-" + year + ".meta")).get(n);
+                    String hashLine = Files.readAllLines(Paths.get(String.valueOf(metaFilePath))).get(n);
                     String metaHash = hashLine.substring(7);
 
                     MessageDigest md = MessageDigest.getInstance("SHA-256");
-                    String hex = checksum(outputDir + "\\nvdcve-1.1-" + year + ".json", md);
+                    Path jsonFilePath = Paths.get(String.valueOf(outputDir), "nvdcve-1.1-" + year + ".json");
+                    String hex = checksum(String.valueOf(jsonFilePath), md);
 
                     return metaHash.equals(hex);
                 } catch (IOException | NoSuchAlgorithmException ex) {
