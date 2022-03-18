@@ -13,18 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 */}}
-{{ $uuid := uuidv4 }} {{/* force uniqueness for every execution of helm */}}
----
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ template "nist-data-mirror.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
-    helm.sh/chart: {{ include "nist-data-mirror.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    uuid: {{ $uuid | quote }}
+    {{- include "nist-data-mirror.labels" . | nindent 4 }}
 {{- if .Values.service.annotations }}
   annotations:
 {{- toYaml .Values.service.annotations | nindent 4 }}
@@ -37,4 +31,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
+    {{- include "nist-data-mirror.selectorLabels" . | nindent 4 }}
