@@ -250,12 +250,12 @@ public class NistDataMirror {
 
     private void uncompress(File file) {
         byte[] buffer = new byte[1024];
-        GZIPInputStream gzis = null;
-        FileOutputStream out = null;
+        InputStream gzis = null;
+        OutputStream out = null;
         try {
             File outputFile = new File(file.getAbsolutePath().replaceAll(".gz", ""));
-            gzis = new GZIPInputStream(new FileInputStream(file));
-            out = new FileOutputStream(outputFile);
+            gzis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(file)));
+            out = new BufferedOutputStream(new FileOutputStream(outputFile));
             int len;
             while ((len = gzis.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
@@ -305,7 +305,7 @@ public class NistDataMirror {
     private static String checksum(String filepath, MessageDigest md) throws IOException {
 
         // file hashing with DigestInputStream
-        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(filepath), md)) {
+        try (DigestInputStream dis = new DigestInputStream(new BufferedInputStream(new FileInputStream(filepath)), md)) {
             while (dis.read() != -1) ; //empty loop to clear the data
             md = dis.getMessageDigest();
         }
