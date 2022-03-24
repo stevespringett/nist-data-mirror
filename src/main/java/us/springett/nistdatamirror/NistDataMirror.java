@@ -60,11 +60,12 @@ public class NistDataMirror {
     private static final Map<String, Map<String, String>> versionToFilenameMaps = new HashMap<>();
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
-    private File outputDir;
+    private final File outputDir;
     private boolean downloadFailed = false;
     private final Proxy proxy;
+    //private URL url;
 
-    {
+    static {
         Map<String, String> version11Filenames = new HashMap<>();
         version11Filenames.put("cveJsonModifiedUrl", CVE_JSON_11_MODIFIED_URL);
         version11Filenames.put("cveJsonRecentUrl", CVE_JSON_11_RECENT_URL);
@@ -92,7 +93,10 @@ public class NistDataMirror {
     public NistDataMirror(String outputDirPath) {
         outputDir = new File(outputDirPath);
         if (!outputDir.exists()) {
-            outputDir.mkdirs();
+            boolean mkdirOk = outputDir.mkdirs();
+            if (!mkdirOk) {
+                System.out.println("Could not create " + outputDir.getAbsolutePath() + " even though it did not exist.");
+            }
         }
         proxy = initProxy();
     }
@@ -228,10 +232,8 @@ public class NistDataMirror {
             bos = new BufferedOutputStream(new FileOutputStream(file));
            
             int i;
-            long count = 0;
             while ((i = bis.read()) != -1) {
                 bos.write(i);
-                count++;
             }
             success = true;
         } catch (IOException e) {
@@ -284,7 +286,7 @@ public class NistDataMirror {
      * This function checks, if the generated Hash of the json file matches the
      * hashcode in the meta file
      *
-     * @param year
+     * @param year four digit year to use
      * @return true or false
      */
     private Boolean validCheck(int year) {
@@ -309,7 +311,11 @@ public class NistDataMirror {
 
         // file hashing with DigestInputStream
         try ( DigestInputStream dis = new DigestInputStream(new BufferedInputStream(new FileInputStream(filepath)), md)) {
-            while (dis.read() != -1) ; //empty loop to clear the data
+            // read and discard all data, causing the message digest to be calculated.
+            int character;
+            do {
+                character = dis.read();
+            } while (character != -1);
             md = dis.getMessageDigest();
         }
 
