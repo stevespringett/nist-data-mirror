@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 */}}
-{{ $uuid := uuidv4 }} {{/* force uniqueness for every execution of helm */}}
----
 {{- if .Values.persistence.enabled -}}
 {{- if not .Values.persistence.data.existingClaim -}}
 kind: PersistentVolumeClaim
@@ -22,11 +20,7 @@ apiVersion: v1
 metadata:
   name: {{ template "nist-data-mirror.fullname" . }}-data
   labels:
-    app.kubernetes.io/name: {{ include "nist-data-mirror.name" . }}
-    helm.sh/chart: {{ include "nist-data-mirror.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    uuid: {{ $uuid | quote }}
+    {{- include "nist-data-mirror.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.data.accessMode | quote }}
