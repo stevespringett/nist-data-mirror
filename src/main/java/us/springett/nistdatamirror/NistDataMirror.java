@@ -16,8 +16,6 @@
 package us.springett.nistdatamirror;
 
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -62,19 +60,20 @@ public class NistDataMirror {
     private static final Map<String, Map<String, String>> versionToFilenameMaps = new HashMap<>();
     private static final int START_YEAR = 2002;
     private static final int END_YEAR = Calendar.getInstance().get(Calendar.YEAR);
-    private File outputDir;
+    private final File outputDir;
     private boolean downloadFailed = false;
     private final Proxy proxy;
+    //private URL url;
 
-    {
-    	Map<String, String> version11Filenames = new HashMap<>();
-    	version11Filenames.put("cveJsonModifiedUrl", CVE_JSON_11_MODIFIED_URL);
+    static {
+        Map<String, String> version11Filenames = new HashMap<>();
+        version11Filenames.put("cveJsonModifiedUrl", CVE_JSON_11_MODIFIED_URL);
         version11Filenames.put("cveJsonRecentUrl", CVE_JSON_11_RECENT_URL);
-    	version11Filenames.put("cveJsonBaseUrl", CVE_JSON_11_BASE_URL);
-    	version11Filenames.put("cveModifiedMeta", CVE_MODIFIED_11_META);
+        version11Filenames.put("cveJsonBaseUrl", CVE_JSON_11_BASE_URL);
+        version11Filenames.put("cveModifiedMeta", CVE_MODIFIED_11_META);
         version11Filenames.put("cveRecentMeta", CVE_RECENT_11_META);
-    	version11Filenames.put("cveBaseMeta", CVE_BASE_11_META);
-    	versionToFilenameMaps.put("1.1", version11Filenames);
+        version11Filenames.put("cveBaseMeta", CVE_BASE_11_META);
+        versionToFilenameMaps.put("1.1", version11Filenames);
     }
 
     public static void main(String[] args) {
@@ -94,7 +93,10 @@ public class NistDataMirror {
     public NistDataMirror(String outputDirPath) {
         outputDir = new File(outputDirPath);
         if (!outputDir.exists()) {
-            outputDir.mkdirs();
+            boolean mkdirOk = outputDir.mkdirs();
+            if (!mkdirOk) {
+                System.out.println("Could not create " + outputDir.getAbsolutePath() + " even though it did not exist.");
+            }
         }
         proxy = initProxy();
     }
@@ -111,10 +113,11 @@ public class NistDataMirror {
                 System.out.println("Using proxy user " + proxyUser + ":" + proxyPassword);
                 Authenticator authenticator = new Authenticator() {
 
-                   public PasswordAuthentication getPasswordAuthentication() {
-                       return (new PasswordAuthentication(proxyUser,
-                             proxyPassword.toCharArray()));
-                   }
+                    @Override
+                    public PasswordAuthentication getPasswordAuthentication() {
+                        return (new PasswordAuthentication(proxyUser,
+                                proxyPassword.toCharArray()));
+                    }
 
                 };
                 Authenticator.setDefault(authenticator);
@@ -152,13 +155,13 @@ public class NistDataMirror {
                 downloadVersionForYear(version, year);
                 Boolean valid = validCheck(year);
                 System.out.println("File " + year + " is valid.");
-                if (Boolean.FALSE.equals(valid)){
+                if (Boolean.FALSE.equals(valid)) {
                     int i = 0;
-                    while (i < 2){
+                    while (i < 2) {
                         downloadVersionForYear(version, year);
                         Boolean valid2 = validCheck(year);
                         i++;
-                        if (Boolean.TRUE.equals(valid2)){
+                        if (Boolean.TRUE.equals(valid2)) {
                             System.out.println("File " + year + " is valid.");
                             break;
                         }
@@ -176,18 +179,18 @@ public class NistDataMirror {
         }
     }
 
-	private void downloadVersionForYear(String version, int year) throws MirrorException {
-		MetaProperties before;
-		MetaProperties after;
-		String cveBaseMetaUrl = versionToFilenameMaps.get(version).get("cveBaseMeta").replace("%d", String.valueOf(year));
-		before = readLocalMetaForURL(cveBaseMetaUrl);
-		doDownload(cveBaseMetaUrl);
-		after = readLocalMetaForURL(cveBaseMetaUrl);
-		if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
-		    String cveJsonBaseUrl = versionToFilenameMaps.get(version).get("cveJsonBaseUrl").replace("%d", String.valueOf(year));
-		    doDownload(cveJsonBaseUrl);
-		}
-	}
+    private void downloadVersionForYear(String version, int year) throws MirrorException {
+        MetaProperties before;
+        MetaProperties after;
+        String cveBaseMetaUrl = versionToFilenameMaps.get(version).get("cveBaseMeta").replace("%d", String.valueOf(year));
+        before = readLocalMetaForURL(cveBaseMetaUrl);
+        doDownload(cveBaseMetaUrl);
+        after = readLocalMetaForURL(cveBaseMetaUrl);
+        if (before == null || after.getLastModifiedDate() > before.getLastModifiedDate()) {
+            String cveJsonBaseUrl = versionToFilenameMaps.get(version).get("cveJsonBaseUrl").replace("%d", String.valueOf(year));
+            doDownload(cveJsonBaseUrl);
+        }
+    }
 
     private MetaProperties readLocalMetaForURL(String metaUrl) throws MirrorException {
         URL url;
@@ -227,7 +230,7 @@ public class NistDataMirror {
             bis = new BufferedInputStream(connection.getInputStream());
             file = new File(outputDir, filename);
             bos = new BufferedOutputStream(new FileOutputStream(file));
-
+           
             int i;
             while ((i = bis.read()) != -1) {
                 bos.write(i);
@@ -250,12 +253,12 @@ public class NistDataMirror {
 
     private void uncompress(File file) {
         byte[] buffer = new byte[1024];
-        GZIPInputStream gzis = null;
-        FileOutputStream out = null;
+        InputStream gzis = null;
+        OutputStream out = null;
         try {
             File outputFile = new File(file.getAbsolutePath().replaceAll(".gz", ""));
-            gzis = new GZIPInputStream(new FileInputStream(file));
-            out = new FileOutputStream(outputFile);
+            gzis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(file)));
+            out = new BufferedOutputStream(new FileOutputStream(outputFile));
             int len;
             while ((len = gzis.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
@@ -280,42 +283,59 @@ public class NistDataMirror {
     }
 
     /**
-     * This function checks, if the generated Hash of the json file matches the hashcode in the meta file
-     * @param year
+     * This function checks, if the generated Hash of the json file matches the
+     * hashcode in the meta file
+     *
+     * @param year four digit year to use
      * @return true or false
      */
     private Boolean validCheck(int year) {
-                try {
-                    Path metaFilePath = Paths.get(String.valueOf(outputDir), "nvdcve-1.1-" + year + ".meta");
-                    int n = 4; // The line number where the hash is saved in the meta file
-                    String hashLine = Files.readAllLines(Paths.get(String.valueOf(metaFilePath))).get(n);
-                    String metaHash = hashLine.substring(7);
+        try {
+            Path metaFilePath = Paths.get(String.valueOf(outputDir), "nvdcve-1.1-" + year + ".meta");
+            int n = 4; // The line number where the hash is saved in the meta file
+            String hashLine = Files.readAllLines(Paths.get(String.valueOf(metaFilePath))).get(n);
+            String metaHash = hashLine.substring(7);
 
-                    MessageDigest md = MessageDigest.getInstance("SHA-256");
-                    Path jsonFilePath = Paths.get(String.valueOf(outputDir), "nvdcve-1.1-" + year + ".json");
-                    String hex = checksum(String.valueOf(jsonFilePath), md);
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            Path jsonFilePath = Paths.get(String.valueOf(outputDir), "nvdcve-1.1-" + year + ".json");
+            String hex = checksum(String.valueOf(jsonFilePath), md);
 
-                    return metaHash.equals(hex);
-                } catch (IOException | NoSuchAlgorithmException ex) {
-                    ex.printStackTrace();
-                }
+            return metaHash.equals(hex);
+        } catch (IOException | NoSuchAlgorithmException ex) {
+            ex.printStackTrace();
+        }
         return null;
     }
 
     private static String checksum(String filepath, MessageDigest md) throws IOException {
 
         // file hashing with DigestInputStream
-        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(filepath), md)) {
-            while (dis.read() != -1) ; //empty loop to clear the data
+        try ( DigestInputStream dis = new DigestInputStream(new BufferedInputStream(new FileInputStream(filepath)), md)) {
+            // read and discard all data, causing the message digest to be calculated.
+            int character;
+            do {
+                character = dis.read();
+            } while (character != -1);
             md = dis.getMessageDigest();
         }
 
         // bytes to hex
-        StringBuilder result = new StringBuilder();
-        for (byte b : md.digest()) {
-            result.append(String.format("%02x", b));
-        }
-        return result.toString().toUpperCase(Locale.ROOT);
+        final byte[] digest = md.digest();
+        String digestHexString = bytesToHex(digest);
+        return digestHexString.toUpperCase(Locale.ROOT);
 
     }
+
+    // https://stackoverflow.com/a/9855338/53897
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
     }
+}

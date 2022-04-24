@@ -31,31 +31,6 @@ public class MirrorException extends IOException {
 
     /**
      * Creates a new MirrorException.
-     */
-    public MirrorException() {
-        super();
-    }
-
-    /**
-     * Creates a new MirrorException.
-     *
-     * @param msg a message for the exception.
-     */
-    public MirrorException(String msg) {
-        super(msg);
-    }
-
-    /**
-     * Creates a new MirrorException.
-     *
-     * @param ex the cause of the exception.
-     */
-    public MirrorException(Throwable ex) {
-        super(ex);
-    }
-
-    /**
-     * Creates a new MirrorException.
      *
      * @param msg a message for the exception.
      * @param ex the cause of the exception.
