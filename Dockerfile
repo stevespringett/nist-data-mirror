@@ -21,15 +21,9 @@ LABEL org.label-schema.vendor="sspringett"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL org.label-schema.docker.cmd="docker run -dit --name mirror -p 80:80 --mount type=bind,source=\"$(pwd)\"/target/docs/,target=/usr/local/apache2/htdocs sspringett/nvdmirror"
 
-ENV user=mirror
-
 RUN apk update                                               && \
     apk add --no-cache openjdk8-jre dcron nss supervisor     && \
-    addgroup -S $user                                        && \
-    adduser -S $user -G $user                                && \
     mkdir -p /tmp/nvd                                        && \
-    chown -R $user:$user /tmp/nvd                            && \
-    chown -R $user:$user /usr/local/apache2/htdocs           && \
     rm -v /usr/local/apache2/htdocs/index.html
 
 COPY ["/src/docker/conf/supervisord.conf", "/etc/supervisor/conf.d/supervisord.conf"]
