@@ -20,7 +20,7 @@ $ cd nist-data-mirror
 $ mkdir ./target
 
 # Package helm chart
-$ helm package --app-version <app_version>  --version <helm_chart_version> -destination ./target .
+$ helm package --app-version <app_version>  --version <helm_chart_version> --destination ./target .
 
 # As a best practice, push your packaged chart to helm repo. e.g. push it to artifactory, chartmusuem etc.
 $ helm push target/nist-data-mirror-<helm_chart_version>.tgz chartmuseum
