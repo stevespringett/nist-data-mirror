@@ -2,6 +2,16 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/21c46e93bdbe4e6f99085da9ece477e3)](https://www.codacy.com/app/stevespringett/nist-data-mirror?utm_source=github.com&utm_medium=referral&utm_content=stevespringett/nist-data-mirror&utm_campaign=Badge_Grade)
 [![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](https://github.com/stevespringett/nist-data-mirror/blob/master/LICENSE)
 
+# END-OF-LIFE NOTICE
+On October 3, 2022, the [NVD announced](https://nvd.nist.gov/General/News/changes-to-feeds-and-apis) that they will be 
+launching v2 of their APIs. When launched, the v1 API along with the data feeds that are downloaded and used by tools 
+such as Dependency-Check, will be deprecated. Since the announcement, the v2 APIs have been launched indicating that the
+NVD will officially retire the data feeds in 12 months, or in Q4 2023.
+
+Due to this announcement, this project is now archived. No future work is planned.
+
+---
+
 # NIST Data Mirror
 
 A simple Java command-line utility to mirror the NVD (CPE/CVE JSON) data from NIST.
