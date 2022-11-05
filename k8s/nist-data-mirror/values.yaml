@@ -3,7 +3,7 @@ image:
   # Provide url for Docker image. <Required>
   repository: sspringett/nvdmirror
   # Provide specific tag for docker image. If not provided, Default is "Latest".
-  tag: 1.4.0
+  tag: 1.6.0
   pullPolicy: IfNotPresent
   # Provide imagePullSecret used for pulling image from your docker registry.
   pullSecret: {}
